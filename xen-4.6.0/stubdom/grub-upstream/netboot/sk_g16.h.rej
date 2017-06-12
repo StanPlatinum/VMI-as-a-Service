@@ -1,0 +1,22 @@
+--- netboot/sk_g16.h	2003-07-09 12:45:38.000000000 +0100
++++ netboot/sk_g16.h	2000-07-29 20:22:54.000000000 +0100
+@@ -4,7 +4,7 @@
+  * of the GNU Public License, incorporated herein by reference.
+  *
+  * Module         : sk_g16.h
+- * Version        : $Revision: 1.3 $
++ * Version        : $Revision: 388 $
+  *
+  * Author         : M.Hipp (mhipp@student.uni-tuebingen.de)
+  * changes by     : Patrick J.D. Weichmann
+@@ -15,8 +15,8 @@
+  *                  the am7990 (LANCE) chip used for writing a
+  *                  network device driver which uses this chip
+  *
+- * $Log: sk_g16.h,v $
+- * Revision 1.3  2000/07/29 19:22:54  okuji
++ * $Log$
++ * Revision 1.3  2000-07-29 19:22:54  okuji
+  * update the network support to etherboot-4.6.4.
+  *
+ -*/

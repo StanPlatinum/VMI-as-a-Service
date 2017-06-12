@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Andrew Cooper &lt;andrew.cooper3@citrix.com&gt;" />
+  <title>LibXenLight Domain Image Format</title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<div id="header">
+<h1 class="title">LibXenLight Domain Image Format</h1>
+<h2 class="author">Andrew Cooper &lt;<script type="text/javascript">
+<!--
+h='&#x63;&#x69;&#116;&#114;&#x69;&#120;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#x61;&#110;&#100;&#114;&#x65;&#x77;&#46;&#x63;&#x6f;&#x6f;&#112;&#x65;&#114;&#x33;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+e+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#x61;&#110;&#100;&#114;&#x65;&#x77;&#46;&#x63;&#x6f;&#x6f;&#112;&#x65;&#114;&#x33;&#32;&#x61;&#116;&#32;&#x63;&#x69;&#116;&#114;&#x69;&#120;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript>&gt;</h2>
+<h3 class="date">Revision 1</h3>
+</div>
+<div id="TOC">
+<ul>
+<li><a href="#introduction"><span class="toc-section-number">1</span> Introduction</a><ul>
+<li><a href="#purpose"><span class="toc-section-number">1.1</span> Purpose</a></li>
+<li><a href="#not-yet-included"><span class="toc-section-number">1.2</span> Not Yet Included</a></li>
+</ul></li>
+<li><a href="#overview"><span class="toc-section-number">2</span> Overview</a></li>
+<li><a href="#header"><span class="toc-section-number">3</span> Header</a></li>
+<li><a href="#record-overview"><span class="toc-section-number">4</span> Record Overview</a><ul>
+<li><a href="#emulator-records"><span class="toc-section-number">4.1</span> Emulator Records</a></li>
+</ul></li>
+<li><a href="#records"><span class="toc-section-number">5</span> Records</a><ul>
+<li><a href="#end"><span class="toc-section-number">5.1</span> END</a></li>
+<li><a href="#libxc_context"><span class="toc-section-number">5.2</span> LIBXC_CONTEXT</a></li>
+<li><a href="#emulator_xenstore_data"><span class="toc-section-number">5.3</span> EMULATOR_XENSTORE_DATA</a></li>
+<li><a href="#emulator_context"><span class="toc-section-number">5.4</span> EMULATOR_CONTEXT</a></li>
+<li><a href="#checkpoint_end"><span class="toc-section-number">5.5</span> CHECKPOINT_END</a></li>
+</ul></li>
+<li><a href="#future-extensions"><span class="toc-section-number">6</span> Future Extensions</a></li>
+</ul>
+</div>
+<h1 id="introduction"><a href="#introduction"><span class="header-section-number">1</span> Introduction</a></h1>
+<p>For the purposes of this document, <code>xl</code> is used as a representation of any implementer of the <code>libxl</code> API. <code>xl</code> should be considered completely interchangeable with alternates, such as <code>libvirt</code> or <code>xenopsd-xl</code>.</p>
+<h2 id="purpose"><a href="#purpose"><span class="header-section-number">1.1</span> Purpose</a></h2>
+<p>The <em>domain image format</em> is the context of a running domain used for snapshots of a domain or for transferring domains between hosts during migration.</p>
+<p>There are a number of problems with the domain image format used in Xen 4.5 and earlier (the <em>legacy format</em>)</p>
+<ul>
+<li><p>There is no <code>libxl</code> context information. <code>xl</code> is required to send certain pieces of <code>libxl</code> context itself.</p></li>
+<li><p>The contents of the stream is passed directly through <code>libxl</code> to <code>libxc</code>. The legacy <code>libxc</code> format contained some information which belonged at the <code>libxl</code> level, resulting in awkward layer violation to return the information back to <code>libxl</code>.</p></li>
+<li><p>The legacy <code>libxc</code> format was inextensible, causing inextensibility in the legacy <code>libxl</code> handling.</p></li>
+</ul>
+<p>This design addresses the above points, allowing for a completely self-contained, extensible stream with each layer responsible for its own appropriate information.</p>
+<h2 id="not-yet-included"><a href="#not-yet-included"><span class="header-section-number">1.2</span> Not Yet Included</a></h2>
+<p>The following features are not yet fully specified and will be included in a future draft.</p>
+<ul>
+<li>ARM</li>
+</ul>
+<h1 id="overview"><a href="#overview"><span class="header-section-number">2</span> Overview</a></h1>
+<p>The image format consists of a <em>Header</em>, followed by 1 or more <em>Records</em>. Each record consists of a type and length field, followed by any type-specific data.</p>
+<p></p>
+<h1 id="header"><a href="#header"><span class="header-section-number">3</span> Header</a></h1>
+<p>The header identifies the stream as a <code>libxl</code> stream, including the version of this specification that it complies with.</p>
+<p>All fields in this header shall be in <em>big-endian</em> byte order, regardless of the setting of the endianness bit.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+
+| ident                                           |
++-----------------------+-------------------------+
+| version               | options                 |
++-----------------------+-------------------------+</code></pre>
+<table>
+<col width="16%" />
+<col width="77%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ident</td>
+<td align="left">0x4c6962786c466d74 (&quot;LibxlFmt&quot; in ASCII).</td>
+</tr>
+<tr class="even">
+<td align="left">version</td>
+<td align="left">0x00000002. The version of this specification.</td>
+</tr>
+<tr class="odd">
+<td align="left">options</td>
+<td align="left">bit 0: Endianness. 0 = little-endian, 1 = big-endian.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">bit 1: Legacy Format. If set, this stream was created by the legacy conversion tool.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">bits 2-31: Reserved.</td>
+</tr>
+</tbody>
+</table>
+<p>The endianness shall be 0 (little-endian) for images generated on an i386, x86_64, or arm host.</p>
+<p></p>
+<h1 id="record-overview"><a href="#record-overview"><span class="header-section-number">4</span> Record Overview</a></h1>
+<p>A record has a record header, type specific data and a trailing footer. If <code>length</code> is not a multiple of 8, the body is padded with zeroes to align the end of the record on an 8 octet boundary.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----------------------+-------------------------+
+| type                  | body_length             |
++-----------+-----------+-------------------------+
+| body...                                         |
+...
+|           | padding (0 to 7 octets)             |
++-----------+-------------------------------------+</code></pre>
+<table>
+<col width="18%" />
+<col width="76%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">0x00000000: END</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000001: LIBXC_CONTEXT</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000002: EMULATOR_XENSTORE_DATA</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000003: EMULATOR_CONTEXT</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000004: CHECKPOINT_END</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000005 - 0x7FFFFFFF: Reserved for future <em>mandatory</em> records.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x80000000 - 0xFFFFFFFF: Reserved for future <em>optional</em> records.</td>
+</tr>
+<tr class="even">
+<td align="left">body_length</td>
+<td align="left">Length in octets of the record body.</td>
+</tr>
+<tr class="odd">
+<td align="left">body</td>
+<td align="left">Content of the record.</td>
+</tr>
+<tr class="even">
+<td align="left">padding</td>
+<td align="left">0 to 7 octets of zeros to pad the whole record to a multiple of 8 octets.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="emulator-records"><a href="#emulator-records"><span class="header-section-number">4.1</span> Emulator Records</a></h2>
+<p>Several records are specifically for emulators, and have a common sub header.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| emulator_id            | index                  |
++------------------------+------------------------+
+| record specific data                            |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">emulator_id</td>
+<td align="left">0x00000000: Unknown (In the case of a legacy stream)</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000001: Qemu Traditional</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000002: Qemu Upstream</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000003 - 0xFFFFFFFF: Reserved for future emulators.</td>
+</tr>
+<tr class="odd">
+<td align="left">index</td>
+<td align="left">Index of this emulator for the domain.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h1 id="records"><a href="#records"><span class="header-section-number">5</span> Records</a></h1>
+<h2 id="end"><a href="#end"><span class="header-section-number">5.1</span> END</a></h2>
+<p>A end record marks the end of the image, and shall be the final record in the stream.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The end record contains no fields; its body_length is 0.</p>
+<h2 id="libxc_context"><a href="#libxc_context"><span class="header-section-number">5.2</span> LIBXC_CONTEXT</a></h2>
+<p>A libxc context record is a marker, indicating that the stream should be handed to <code>xc_domain_restore()</code>. <code>libxc</code> shall be responsible for reading its own image format from the stream.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The libxc context record contains no fields; its body_length is 0<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>.</p>
+<h2 id="emulator_xenstore_data"><a href="#emulator_xenstore_data"><span class="header-section-number">5.3</span> EMULATOR_XENSTORE_DATA</a></h2>
+<p>A set of xenstore key/value pairs for a specific emulator associated with the domain.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| emulator_id            | index                  |
++------------------------+------------------------+
+| xenstore key/value data                         |
+...
++-------------------------------------------------+</code></pre>
+<p>Xenstore key/value data are encoded as a packed sequence of (key, value) tuples. Each (key, value) tuple is a packed pair of NUL terminated octets, conforming to xenstore protocol character encoding (keys strictly as alphanumeric ASCII and <code>-/_@</code>, values expected to be human-readable ASCII).</p>
+<p>Keys shall be relative to to the device models xenstore tree for the new domain. At the time of writing, keys are relative to the path</p>
+<blockquote>
+<p><code>/local/domain/$dm_domid/device-model/$domid/</code></p>
+</blockquote>
+<p>although this path is free to change moving forward, thus should not be assumed.</p>
+<h2 id="emulator_context"><a href="#emulator_context"><span class="header-section-number">5.4</span> EMULATOR_CONTEXT</a></h2>
+<p>A context blob for a specific emulator associated with the domain.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| emulator_id            | index                  |
++------------------------+------------------------+
+| emulator_ctx                                    |
+...
++-------------------------------------------------+</code></pre>
+<p>The <em>emulator_ctx</em> is a binary blob interpreted by the emulator identified by <em>emulator_id</em>. Its format is unspecified.</p>
+<h2 id="checkpoint_end"><a href="#checkpoint_end"><span class="header-section-number">5.5</span> CHECKPOINT_END</a></h2>
+<p>A checkpoint end record marks the end of a checkpoint in the image.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The end record contains no fields; its body_length is 0.</p>
+<h1 id="future-extensions"><a href="#future-extensions"><span class="header-section-number">6</span> Future Extensions</a></h1>
+<p>All changes to this specification should bump the revision number in the title block.</p>
+<p>All changes to the header require the header version to be increased.</p>
+<p>The format may be extended by adding additional record types.</p>
+<p>Extending an existing record type must be done by adding a new record type. This allows old images with the old record to still be restored.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>The sending side cannot calculate ahead of time how much data <code>libxc</code> might write into the stream, especially for live migration where the quantity of data is partially proportional to the elapsed time.<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+</body>
+</html>

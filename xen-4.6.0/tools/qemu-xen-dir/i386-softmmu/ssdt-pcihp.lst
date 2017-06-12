@@ -1,0 +1,213 @@
+
+Intel ACPI Component Architecture
+ASL Optimizing Compiler version 20140214-64 [Mar 29 2014]
+Copyright (c) 2000 - 2014 Intel Corporation
+
+Compilation of "ssdt-pcihp.dsl.i" - Wed May 17 19:45:04 2017
+
+       2:  /* ACPI_EXTRACT_ALL_CODE ssdp_pcihp_aml */
+       4:  DefinitionBlock ("ssdt-pcihp.aml", "SSDT", 0x01, "BXPC", "BXSSDTPCIHP", 0x1)
+
+00000000:  53 53 44 54 C6 00 00 00     "SSDT...."
+00000008:  01 7F 42 58 50 43 00 00     "..BXPC.."
+00000010:  42 58 53 53 44 54 50 43     "BXSSDTPC"
+00000018:  01 00 00 00 49 4E 54 4C     "....INTL"
+00000020:  14 02 14 20 ............    "... "
+
+       5:  {
+       6:      External(\_SB.PCI0, DeviceObj)
+       7:      External(\_SB.PCI0.PCEJ, MethodObj)
+       8:      External(BSEL, IntObj)
+       9:      Scope(\_SB.PCI0) {
+
+00000024:  10 41 0A 5C 2E 5F 53 42     ".A.\._SB"
+0000002C:  5F 50 43 49 30 .........    "_PCI0"
+
+      10:          
+      11:  /* ACPI_EXTRACT_DEVICE_START ssdt_pcihp_start */
+      13:          
+      14:  /* ACPI_EXTRACT_DEVICE_END ssdt_pcihp_end */
+      16:          
+      17:  /* ACPI_EXTRACT_DEVICE_STRING ssdt_pcihp_name */
+      19:          Device(SAA) {
+
+00000031:  5B 82 29 53 41 41 5F ...    "[.)SAA_"
+
+      20:              
+      21:  /* ACPI_EXTRACT_NAME_BYTE_CONST ssdt_pcihp_id */
+      23:              Name(_SUN, 0xAA)
+
+00000038:  08 5F 53 55 4E 0A AA ...    "._SUN.."
+
+      24:              
+      25:  /* ACPI_EXTRACT_NAME_DWORD_CONST ssdt_pcihp_adr */
+      27:              Name(_ADR, 0xAA0000)
+
+0000003F:  08 5F 41 44 52 0C 00 00     "._ADR..."
+00000047:  AA 00 ..................    ".."
+
+      28:              Method(_EJ0, 1) {
+
+00000049:  14 12 5F 45 4A 30 01 ...    ".._EJ0."
+
+      29:                  PCEJ(BSEL, _SUN)
+
+00000050:  50 43 45 4A 42 53 45 4C     "PCEJBSEL"
+00000058:  5F 53 55 4E ............    "_SUN"
+
+      30:              }
+      31:          }
+      32:          
+      33:  /* ACPI_EXTRACT_DEVICE_START ssdt_pcinohp_start */
+      35:          
+      36:  /* ACPI_EXTRACT_DEVICE_END ssdt_pcinohp_end */
+      38:          
+      39:  /* ACPI_EXTRACT_DEVICE_STRING ssdt_pcinohp_name */
+      41:          Device(SBB) {
+
+0000005C:  5B 82 0F 53 42 42 5F ...    "[..SBB_"
+
+      42:              
+      43:  /* ACPI_EXTRACT_NAME_DWORD_CONST ssdt_pcinohp_adr */
+      45:              Name(_ADR, 0xAA0000)
+
+00000063:  08 5F 41 44 52 0C 00 00     "._ADR..."
+0000006B:  AA 00 ..................    ".."
+
+      46:          }
+      47:          
+      48:  /* ACPI_EXTRACT_DEVICE_START ssdt_pcivga_start */
+      50:          
+      51:  /* ACPI_EXTRACT_DEVICE_END ssdt_pcivga_end */
+      53:          
+      54:  /* ACPI_EXTRACT_DEVICE_STRING ssdt_pcivga_name */
+      56:          Device(SCC) {
+
+0000006D:  5B 82 2A 53 43 43 5F ...    "[.*SCC_"
+
+      57:              
+      58:  /* ACPI_EXTRACT_NAME_DWORD_CONST ssdt_pcivga_adr */
+      60:              Name(_ADR, 0xAA0000)
+
+00000074:  08 5F 41 44 52 0C 00 00     "._ADR..."
+0000007C:  AA 00 ..................    ".."
+
+      61:              Method(_S1D, 0, NotSerialized) {
+
+0000007E:  14 08 5F 53 31 44 00 ...    ".._S1D."
+
+      62:                  Return (0x00)
+
+[****iasl****]
+ssdt-pcihp.dsl.i     61:                 Return (0x00)
+Optimize 1039 -                                    ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+00000085:  A4 00 ..................    ".."
+
+      63:              }
+      64:              Method(_S2D, 0, NotSerialized) {
+
+00000087:  14 08 5F 53 32 44 00 ...    ".._S2D."
+
+      65:                  Return (0x00)
+
+[****iasl****]
+ssdt-pcihp.dsl.i     64:                 Return (0x00)
+Optimize 1039 -                                    ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+0000008E:  A4 00 ..................    ".."
+
+      66:              }
+      67:              Method(_S3D, 0, NotSerialized) {
+
+00000090:  14 08 5F 53 33 44 00 ...    ".._S3D."
+
+      68:                  Return (0x00)
+
+[****iasl****]
+ssdt-pcihp.dsl.i     67:                 Return (0x00)
+Optimize 1039 -                                    ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+00000097:  A4 00 ..................    ".."
+
+      69:              }
+      70:          }
+      71:          
+      72:  /* ACPI_EXTRACT_DEVICE_START ssdt_pciqxl_start */
+      74:          
+      75:  /* ACPI_EXTRACT_DEVICE_END ssdt_pciqxl_end */
+      77:          
+      78:  /* ACPI_EXTRACT_DEVICE_STRING ssdt_pciqxl_name */
+      80:          Device(SDD) {
+
+00000099:  5B 82 2B 53 44 44 5F ...    "[.+SDD_"
+
+      81:              
+      82:  /* ACPI_EXTRACT_NAME_DWORD_CONST ssdt_pciqxl_adr */
+      84:              Name(_ADR, 0xAA0000)
+
+000000A0:  08 5F 41 44 52 0C 00 00     "._ADR..."
+000000A8:  AA 00 ..................    ".."
+
+      85:              Method(_S1D, 0, NotSerialized) {
+
+000000AA:  14 08 5F 53 31 44 00 ...    ".._S1D."
+
+      86:                  Return (0x00)
+
+[****iasl****]
+ssdt-pcihp.dsl.i     85:                 Return (0x00)
+Optimize 1039 -                                    ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+000000B1:  A4 00 ..................    ".."
+
+      87:              }
+      88:              Method(_S2D, 0, NotSerialized) {
+
+000000B3:  14 08 5F 53 32 44 00 ...    ".._S2D."
+
+      89:                  Return (0x00)
+
+[****iasl****]
+ssdt-pcihp.dsl.i     88:                 Return (0x00)
+Optimize 1039 -                                    ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+000000BA:  A4 00 ..................    ".."
+
+      90:              }
+      91:              Method(_S3D, 0, NotSerialized) {
+
+000000BC:  14 09 5F 53 33 44 00 ...    ".._S3D."
+
+      92:                  Return (0x03)
+
+000000C3:  A4 0A 03 ...............    "..."
+      93:              }
+      94:          }
+      95:      }
+      96:  }
+
+
+
+Summary of errors and warnings
+
+
+ASL Optimizing Compiler version 20140214-64 [Mar 29 2014]
+
+ASL Input:     ssdt-pcihp.dsl.i - 97 lines, 2188 bytes, 23 keywords
+AML Output:    ssdt-pcihp.aml - 198 bytes, 17 named objects, 6 executable opcodes
+Listing File:  ssdt-pcihp.lst - 6063 bytes
+Hex Dump:      ssdt-pcihp.hex - 224 bytes
+
+Compilation complete. 0 Errors, 0 Warnings, 0 Remarks, 5 Optimizations
+

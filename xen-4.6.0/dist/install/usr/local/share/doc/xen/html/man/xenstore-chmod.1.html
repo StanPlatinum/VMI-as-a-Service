@@ -1,0 +1,98 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#BUGS">BUGS</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>xenstore-chmod - set the permissions of a Xenstore key</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<p><b>xenstore-chmod</b> [<i>OPTION</i>]... [<i>KEY</i>] [<i>PERM</i>]...</p>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>Sets the permissions of the Xenstore <i>KEY</i>.</p>
+
+<p><i>PERM</i> has the format <i>LD</i>, where <i>L</i> is a letter for the type of permission and <i>D</i> is the corresponding domain ID.</p>
+
+<p>The types of permission are:</p>
+
+<dl>
+
+<dt id="r"><b>r</b></dt>
+<dd>
+
+<p>read</p>
+
+</dd>
+<dt id="w"><b>w</b></dt>
+<dd>
+
+<p>write</p>
+
+</dd>
+<dt id="b"><b>b</b></dt>
+<dd>
+
+<p>read and write (both)</p>
+
+</dd>
+<dt id="n"><b>n</b></dt>
+<dd>
+
+<p>no access</p>
+
+</dd>
+</dl>
+
+<p>The first permission entry is the domain owning the key (the owner) <i>and</i> the permissions for any domain not explicitly listed in subsequent entries. The key owner always has full access (read, write, and set permissions).</p>
+
+<dl>
+
+<dt id="r1"><b>-r</b></dt>
+<dd>
+
+<p>Apply the permissions to the key and all its <i>children</i>.</p>
+
+</dd>
+<dt id="s"><b>-s</b></dt>
+<dd>
+
+<p>Connect to the Xenstore daemon using a local socket only.</p>
+
+</dd>
+<dt id="u"><b>-u</b></dt>
+<dd>
+
+<p>Apply the permissions to the key and all its <i>parents</i>.</p>
+
+</dd>
+</dl>
+
+<h1 id="BUGS">BUGS</h1>
+
+<p>Send bugs to xen-devel@lists.xen.org, see http://wiki.xen.org/xenwiki/ReportingBugs on how to send bug reports.</p>
+
+
+</body>
+
+</html>
+
+

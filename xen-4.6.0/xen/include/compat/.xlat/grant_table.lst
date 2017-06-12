@@ -1,0 +1,15 @@
+?	gnttab_cache_flush
+!	gnttab_copy
+?	gnttab_dump_table
+?	gnttab_map_grant_ref
+!	gnttab_setup_table
+!	gnttab_transfer
+?	gnttab_unmap_grant_ref
+?	gnttab_unmap_and_replace
+?	gnttab_set_version
+?	gnttab_get_version
+!	gnttab_get_status_frames
+?	grant_entry_v1
+?       grant_entry_header
+?	grant_entry_v2
+?	gnttab_swap_grant_ref

@@ -1,0 +1,17 @@
+--- netboot/sk_g16.c	2003-07-09 12:45:38.000000000 +0100
++++ netboot/sk_g16.c	2002-01-02 21:56:40.000000000 +0000
+@@ -13,12 +13,12 @@ Changes to make it work with Etherboot b
+  *
+  * Module         : sk_g16.c
+  *
+- * Version        : $Revision: 1.4 $
++ * Version        : $Revision: 609 $
+  *
+  * Author         : Patrick J.D. Weichmann
+  *
+  * Date Created   : 94/05/26
+- * Last Updated   : $Date: 2002/01/02 21:56:40 $
++ * Last Updated   : $Date: 2002-01-02 21:56:40 +0000 (mer 02 jan 2002) $
+  *
+  * Description    : Schneider & Koch G16 Ethernet Device Driver for
+  *                  Linux Kernel >= 1.1.22

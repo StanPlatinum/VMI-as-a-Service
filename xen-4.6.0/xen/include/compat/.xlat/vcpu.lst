@@ -1,0 +1,5 @@
+?	vcpu_get_physid
+?	vcpu_register_vcpu_info
+!	vcpu_runstate_info
+?	vcpu_set_periodic_timer
+!	vcpu_set_singleshot_timer

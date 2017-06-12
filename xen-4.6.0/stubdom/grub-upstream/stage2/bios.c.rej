@@ -1,0 +1,11 @@
+--- stage2/bios.c	2004-03-27 16:34:04.000000000 +0000
++++ stage2/bios.c	2008-03-28 13:22:28.000000000 +0000
+@@ -47,7 +47,7 @@ extern int get_diskinfo_floppy (int driv
+    return the error number. Otherwise, return 0.  */
+ int
+ biosdisk (int read, int drive, struct geometry *geometry,
+-	  int sector, int nsec, int segment)
++	  unsigned int sector, int nsec, int segment)
+ {
+   int err;
+   

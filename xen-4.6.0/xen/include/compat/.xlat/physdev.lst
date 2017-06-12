@@ -1,0 +1,13 @@
+?	physdev_eoi
+?	physdev_get_free_pirq
+?	physdev_irq
+?	physdev_irq_status_query
+?	physdev_manage_pci
+?	physdev_manage_pci_ext
+?	physdev_pci_device
+?	physdev_pci_device_add
+?	physdev_pci_mmcfg_reserved
+?	physdev_unmap_pirq
+?	physdev_restore_msi
+?	physdev_set_iopl
+?	physdev_setup_gsi

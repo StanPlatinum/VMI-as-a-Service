@@ -1,0 +1,22 @@
+<html><head><title>include/xen/errno.h - arch-arm - Xen public headers</title></head><body><pre>
+#ifndef __XEN_ERRNO_H__
+#define __XEN_ERRNO_H__
+
+#include &lt;public/errno.h&gt;
+
+#ifndef __ASSEMBLY__
+
+#define XEN_ERRNO(name, value) name = XEN_##name,
+enum {
+#include &lt;public/errno.h&gt;
+};
+
+#else /* !__ASSEMBLY__ */
+
+#define XEN_ERRNO(name, value) .equ name, XEN_##name
+#include &lt;public/errno.h&gt;
+
+#endif /* __ASSEMBLY__ */
+
+#endif /*  __XEN_ERRNO_H__ */
+</pre></body></html>

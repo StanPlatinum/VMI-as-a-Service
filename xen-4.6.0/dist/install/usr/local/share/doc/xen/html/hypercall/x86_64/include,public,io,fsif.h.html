@@ -1,0 +1,194 @@
+<html><head><title>include/public/io/fsif.h - arch-x86_64 - Xen public headers</title></head><body><pre>
+/******************************************************************************
+ * fsif.h
+ * 
+ * Interface to FS level split device drivers.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Copyright (c) 2007, Grzegorz Milos, &lt;gm281@cam.ac.uk&gt;.
+ */
+
+#ifndef __XEN_PUBLIC_IO_FSIF_H__
+#define __XEN_PUBLIC_IO_FSIF_H__
+
+#include "ring.h"
+#include "../grant_table.h"
+
+#define REQ_FILE_OPEN        1
+#define REQ_FILE_CLOSE       2
+#define REQ_FILE_READ        3
+#define REQ_FILE_WRITE       4
+#define REQ_STAT             5
+#define REQ_FILE_TRUNCATE    6
+#define REQ_REMOVE           7
+#define REQ_RENAME           8
+#define REQ_CREATE           9
+#define REQ_DIR_LIST        10
+#define REQ_CHMOD           11
+#define REQ_FS_SPACE        12
+#define REQ_FILE_SYNC       13
+
+<a  name="Struct_fsif_open_request"><strong>struct fsif_open_request</strong></a> {
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+<a  name="Struct_fsif_close_request"><strong>struct fsif_close_request</strong></a> {
+    uint32_t fd;
+};
+
+<a  name="Struct_fsif_read_request"><strong>struct fsif_read_request</strong></a> {
+    uint32_t fd;
+    int32_t pad;
+    uint64_t len;
+    uint64_t offset;
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> grefs[1];  /* Variable length */
+};
+
+<a  name="Struct_fsif_write_request"><strong>struct fsif_write_request</strong></a> {
+    uint32_t fd;
+    int32_t pad;
+    uint64_t len;
+    uint64_t offset;
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> grefs[1];  /* Variable length */
+};
+
+<a  name="Struct_fsif_stat_request"><strong>struct fsif_stat_request</strong></a> {
+    uint32_t fd;
+};
+
+/* This structure is a copy of some fields from stat structure, returned
+ * via the ring. */
+<a  name="Struct_fsif_stat_response"><strong>struct fsif_stat_response</strong></a> {
+    int32_t  stat_mode;
+    uint32_t stat_uid;
+    uint32_t stat_gid;
+    int32_t  stat_ret;
+    int64_t  stat_size;
+    int64_t  stat_atime;
+    int64_t  stat_mtime;
+    int64_t  stat_ctime;
+};
+
+<a  name="Struct_fsif_truncate_request"><strong>struct fsif_truncate_request</strong></a> {
+    uint32_t fd;
+    int32_t pad;
+    int64_t length;
+};
+
+<a  name="Struct_fsif_remove_request"><strong>struct fsif_remove_request</strong></a> {
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+<a  name="Struct_fsif_rename_request"><strong>struct fsif_rename_request</strong></a> {
+    uint16_t old_name_offset;
+    uint16_t new_name_offset;
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+<a  name="Struct_fsif_create_request"><strong>struct fsif_create_request</strong></a> {
+    int8_t directory;
+    int8_t pad;
+    int16_t pad2;
+    int32_t mode;
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+<a  name="Struct_fsif_list_request"><strong>struct fsif_list_request</strong></a> {
+    uint32_t offset;
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+#define NR_FILES_SHIFT  0
+#define NR_FILES_SIZE   16   /* 16 bits for the number of files mask */
+#define NR_FILES_MASK   (((1ULL &lt;&lt; NR_FILES_SIZE) - 1) &lt;&lt; NR_FILES_SHIFT)
+#define ERROR_SIZE      32   /* 32 bits for the error mask */
+#define ERROR_SHIFT     (NR_FILES_SIZE + NR_FILES_SHIFT)
+#define ERROR_MASK      (((1ULL &lt;&lt; ERROR_SIZE) - 1) &lt;&lt; ERROR_SHIFT)
+#define HAS_MORE_SHIFT  (ERROR_SHIFT + ERROR_SIZE)    
+#define HAS_MORE_FLAG   (1ULL &lt;&lt; HAS_MORE_SHIFT)
+
+<a  name="Struct_fsif_chmod_request"><strong>struct fsif_chmod_request</strong></a> {
+    uint32_t fd;
+    int32_t mode;
+};
+
+<a  name="Struct_fsif_space_request"><strong>struct fsif_space_request</strong></a> {
+    <a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a> gref;
+};
+
+<a  name="Struct_fsif_sync_request"><strong>struct fsif_sync_request</strong></a> {
+    uint32_t fd;
+};
+
+
+/* FS operation request */
+<a  name="Struct_fsif_request"><strong>struct fsif_request</strong></a> {
+    uint8_t type;                 /* Type of the request                  */
+    uint8_t pad;
+    uint16_t id;                  /* Request ID, copied to the response   */
+    uint32_t pad2;
+    union {
+        <a href="include,public,io,fsif.h.html#Struct_fsif_open_request">struct fsif_open_request</a>     fopen;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_close_request">struct fsif_close_request</a>    fclose;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_read_request">struct fsif_read_request</a>     fread;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_write_request">struct fsif_write_request</a>    fwrite;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_stat_request">struct fsif_stat_request</a>     fstat;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_truncate_request">struct fsif_truncate_request</a> ftruncate;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_remove_request">struct fsif_remove_request</a>   fremove;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_rename_request">struct fsif_rename_request</a>   frename;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_create_request">struct fsif_create_request</a>   fcreate;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_list_request">struct fsif_list_request</a>     flist;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_chmod_request">struct fsif_chmod_request</a>    fchmod;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_space_request">struct fsif_space_request</a>    fspace;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_sync_request">struct fsif_sync_request</a>     fsync;
+    } u;
+};
+typedef <a href="include,public,io,fsif.h.html#Struct_fsif_request">struct fsif_request</a> fsif_request_t;
+
+/* FS operation response */
+<a  name="Struct_fsif_response"><strong>struct fsif_response</strong></a> {
+    uint16_t id;
+    uint16_t pad1;
+    uint32_t pad2;
+    union {
+        uint64_t ret_val;
+        <a href="include,public,io,fsif.h.html#Struct_fsif_stat_response">struct fsif_stat_response</a> fstat;
+    } u;
+};
+
+typedef <a href="include,public,io,fsif.h.html#Struct_fsif_response">struct fsif_response</a> fsif_response_t;
+
+#define FSIF_RING_ENTRY_SIZE   64
+
+#define FSIF_NR_READ_GNTS  ((FSIF_RING_ENTRY_SIZE - sizeof(struct fsif_read_request)) /  \
+                                sizeof(<a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a>) + 1)
+#define FSIF_NR_WRITE_GNTS ((FSIF_RING_ENTRY_SIZE - sizeof(struct fsif_write_request)) / \
+                                sizeof(<a href="include,public,grant_table.h.html#Typedef_grant_ref_t">grant_ref_t</a>) + 1)
+
+DEFINE_RING_TYPES(fsif, <a href="include,public,io,fsif.h.html#Struct_fsif_request">struct fsif_request</a>, <a href="include,public,io,fsif.h.html#Struct_fsif_response">struct fsif_response</a>);
+
+#define STATE_INITIALISED     "init"
+#define STATE_READY           "ready"
+#define STATE_CLOSING         "closing"
+#define STATE_CLOSED          "closed"
+
+
+#endif
+</pre></body></html>

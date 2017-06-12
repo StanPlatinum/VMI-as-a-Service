@@ -1,0 +1,11 @@
+prefix=/usr/local
+includedir=${prefix}/include
+libdir=/usr/local/lib
+xenfirmwaredir=/usr/local/lib/xen/boot
+libexec_bin=/usr/local/lib/xen/bin
+
+Name: Xenlight
+Description: The Xenlight library for Xen hypervisor
+Version: @@version@@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lxenlight

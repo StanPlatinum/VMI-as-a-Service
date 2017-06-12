@@ -1,0 +1,94 @@
+--- lib/device.c	2005-03-28 00:14:25.000000000 +0100
++++ lib/device.c	2008-03-28 13:22:28.000000000 +0000
+@@ -69,9 +69,9 @@ struct hd_geometry
+ # ifndef CDROM_GET_CAPABILITY
+ #  define CDROM_GET_CAPABILITY	0x5331	/* get capabilities */
+ # endif /* ! CDROM_GET_CAPABILITY */
+-# ifndef BLKGETSIZE
+-#  define BLKGETSIZE	_IO(0x12,96)	/* return device size */
+-# endif /* ! BLKGETSIZE */
++# ifndef BLKGETSIZE64
++#  define BLKGETSIZE64	_IOR(0x12,114,size_t)	/* return device size */
++# endif /* ! BLKGETSIZE64 */
+ #endif /* __linux__ */
+ 
+ /* Use __FreeBSD_kernel__ instead of __FreeBSD__ for compatibility with
+@@ -152,19 +152,19 @@ get_drive_geometry (struct geometry *geo
+   /* Linux */
+   {
+     struct hd_geometry hdg;
+-    unsigned long nr;
++    unsigned long long nr;
+     
+     if (ioctl (fd, HDIO_GETGEO, &hdg))
+       goto fail;
+ 
+-    if (ioctl (fd, BLKGETSIZE, &nr))
++    if (ioctl (fd, BLKGETSIZE64, &nr))
+       goto fail;
+     
+     /* Got the geometry, so save it. */
+     geom->cylinders = hdg.cylinders;
+     geom->heads = hdg.heads;
+     geom->sectors = hdg.sectors;
+-    geom->total_sectors = nr;
++    geom->total_sectors = nr / 512;
+     
+     goto success;
+   }
+@@ -407,6 +407,12 @@ get_ataraid_disk_name (char *name, int u
+ {
+   sprintf (name, "/dev/ataraid/d%c", unit + '0');
+ }
++
++static void
++get_i2o_disk_name (char *name, char unit)
++{
++  sprintf (name, "/dev/i2o/hd%c", unit);
++}
+ #endif
+ 
+ /* Check if DEVICE can be read. If an error occurs, return zero,
+@@ -801,6 +807,29 @@ init_device_map (char ***map, const char
+ 	  }
+       }
+   }
++    
++  /* This is for I2O - we have /dev/i2o/hd<logical drive><partition> */
++  {
++    int unit;
++
++    for (unit = 'a'; unit < 'f'; unit++)
++      {
++        char name[24];
++    
++        get_i2o_disk_name (name, unit);
++        if (check_device (name))
++          {
++              (*map)[num_hd + 0x80] = strdup (name);
++                  assert ((*map)[num_hd + 0x80]);
++                  
++	    /* If the device map file is opened, write the map.  */
++               if (fp)
++                     fprintf (fp, "(hd%d)\t%s\n", num_hd, name);
++                     
++	    num_hd++;
++          }
++      }
++  }
+ #endif /* __linux__ */
+   
+   /* OK, close the device map file if opened.  */
+@@ -861,6 +890,12 @@ write_to_partition (char **map, int driv
+       if (strcmp (dev + strlen(dev) - 5, "/disc") == 0)
+ 	strcpy (dev + strlen(dev) - 5, "/part");
+     }
++  else
++    {
++      if ((strncmp (dev, "/dev/ataraid/", 13) == 0) ||
++         (strncmp (dev, "/dev/rd/", 8) == 0))
++        strcpy (dev + strlen(dev), "p");
++    }
+   sprintf (dev + strlen(dev), "%d", ((partition >> 16) & 0xFF) + 1);
+   
+   /* Open the partition.  */

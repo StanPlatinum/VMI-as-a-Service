@@ -1,0 +1,169 @@
+<html><head><title>include/public/arch-x86/pmu.h - arch-x86_32 - Xen public headers</title></head><body><pre>
+/*
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ */
+
+#ifndef __XEN_PUBLIC_ARCH_X86_PMU_H__
+#define __XEN_PUBLIC_ARCH_X86_PMU_H__
+
+/* x86-specific PMU definitions */
+
+/* AMD PMU registers and structures */
+<a  name="Struct_xen_pmu_amd_ctxt"><strong>struct xen_pmu_amd_ctxt</strong></a> {
+    /*
+     * Offsets to counter and control MSRs (relative to xen_pmu_arch.c.amd).
+     * For PV(H) guests these fields are RO.
+     */
+    uint32_t counters;
+    uint32_t ctrls;
+
+    /* Counter MSRs */
+#if defined(__STDC_VERSION__) &amp;&amp; __STDC_VERSION__ &gt;= 199901L
+    uint64_t regs[];
+#elif defined(__GNUC__)
+    uint64_t regs[0];
+#endif
+};
+typedef <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_amd_ctxt">struct xen_pmu_amd_ctxt</a> <a  name="Typedef_xen_pmu_amd_ctxt_t"><strong>xen_pmu_amd_ctxt_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_amd_ctxt">xen_pmu_amd_ctxt_t</a>);
+
+/* Intel PMU registers and structures */
+<a  name="Struct_xen_pmu_cntr_pair"><strong>struct xen_pmu_cntr_pair</strong></a> {
+    uint64_t counter;
+    uint64_t control;
+};
+typedef <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_cntr_pair">struct xen_pmu_cntr_pair</a> <a  name="Typedef_xen_pmu_cntr_pair_t"><strong>xen_pmu_cntr_pair_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_cntr_pair">xen_pmu_cntr_pair_t</a>);
+
+<a  name="Struct_xen_pmu_intel_ctxt"><strong>struct xen_pmu_intel_ctxt</strong></a> {
+   /*
+    * Offsets to fixed and architectural counter MSRs (relative to
+    * xen_pmu_arch.c.intel).
+    * For PV(H) guests these fields are RO.
+    */
+    uint32_t fixed_counters;
+    uint32_t arch_counters;
+
+    /* PMU registers */
+    uint64_t global_ctrl;
+    uint64_t global_ovf_ctrl;
+    uint64_t global_status;
+    uint64_t fixed_ctrl;
+    uint64_t ds_area;
+    uint64_t pebs_enable;
+    uint64_t debugctl;
+
+    /* Fixed and architectural counter MSRs */
+#if defined(__STDC_VERSION__) &amp;&amp; __STDC_VERSION__ &gt;= 199901L
+    uint64_t regs[];
+#elif defined(__GNUC__)
+    uint64_t regs[0];
+#endif
+};
+typedef <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_intel_ctxt">struct xen_pmu_intel_ctxt</a> <a  name="Typedef_xen_pmu_intel_ctxt_t"><strong>xen_pmu_intel_ctxt_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_intel_ctxt">xen_pmu_intel_ctxt_t</a>);
+
+/* Sampled domain's registers */
+<a  name="Struct_xen_pmu_regs"><strong>struct xen_pmu_regs</strong></a> {
+    uint64_t ip;
+    uint64_t sp;
+    uint64_t flags;
+    uint16_t cs;
+    uint16_t ss;
+    uint8_t cpl;
+    uint8_t pad[3];
+};
+typedef <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_regs">struct xen_pmu_regs</a> <a  name="Typedef_xen_pmu_regs_t"><strong>xen_pmu_regs_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_regs">xen_pmu_regs_t</a>);
+
+/* PMU flags */
+#define PMU_CACHED         (1&lt;&lt;0) /* PMU MSRs are cached in the context */
+#define PMU_SAMPLE_USER    (1&lt;&lt;1) /* Sample is from user or kernel mode */
+#define PMU_SAMPLE_REAL    (1&lt;&lt;2) /* Sample is from realmode */
+#define PMU_SAMPLE_PV      (1&lt;&lt;3) /* Sample from a PV guest */
+
+/*
+ * Architecture-specific information describing state of the processor at
+ * the time of PMU interrupt.
+ * Fields of this structure marked as RW for guest should only be written by
+ * the guest when PMU_CACHED bit in pmu_flags is set (which is done by the
+ * hypervisor during PMU interrupt). Hypervisor will read updated data in
+ * XENPMU_flush hypercall and clear PMU_CACHED bit.
+ */
+<a  name="Struct_xen_pmu_arch"><strong>struct xen_pmu_arch</strong></a> {
+    union {
+        /*
+         * Processor's registers at the time of interrupt.
+         * WO for hypervisor, RO for guests.
+         */
+        <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_regs">struct xen_pmu_regs</a> regs;
+        /* Padding for adding new registers to xen_pmu_regs in the future */
+#define XENPMU_REGS_PAD_SZ  64
+        uint8_t pad[XENPMU_REGS_PAD_SZ];
+    } r;
+
+    /* WO for hypervisor, RO for guest */
+    uint64_t pmu_flags;
+
+    /*
+     * APIC LVTPC register.
+     * RW for both hypervisor and guest.
+     * Only APIC_LVT_MASKED bit is loaded by the hypervisor into hardware
+     * during XENPMU_flush or XENPMU_lvtpc_set.
+     */
+    union {
+        uint32_t lapic_lvtpc;
+        uint64_t pad;
+    } l;
+
+    /*
+     * Vendor-specific PMU registers.
+     * RW for both hypervisor and guest (see exceptions above).
+     * Guest's updates to this field are verified and then loaded by the
+     * hypervisor into hardware during XENPMU_flush
+     */
+    union {
+        <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_amd_ctxt">struct xen_pmu_amd_ctxt</a> amd;
+        <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_intel_ctxt">struct xen_pmu_intel_ctxt</a> intel;
+
+        /*
+         * Padding for contexts (fixed parts only, does not include MSR banks
+         * that are specified by offsets)
+         */
+#define XENPMU_CTXT_PAD_SZ  128
+        uint8_t pad[XENPMU_CTXT_PAD_SZ];
+    } c;
+};
+typedef <a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_arch">struct xen_pmu_arch</a> <a  name="Typedef_xen_pmu_arch_t"><strong>xen_pmu_arch_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,arch-x86,pmu.h.html#Struct_xen_pmu_arch">xen_pmu_arch_t</a>);
+
+#endif /* __XEN_PUBLIC_ARCH_X86_PMU_H__ */
+/*
+ * Local variables:
+ * mode: C
+ * c-file-style: "BSD"
+ * c-basic-offset: 4
+ * tab-width: 4
+ * indent-tabs-mode: nil
+ * End:
+ */
+
+</pre></body></html>

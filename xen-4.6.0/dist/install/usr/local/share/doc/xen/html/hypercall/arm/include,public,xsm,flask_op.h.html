@@ -1,0 +1,214 @@
+<html><head><title>include/public/xsm/flask_op.h - arch-arm - Xen public headers</title></head><body><pre>
+/*
+ *  This file contains the flask_op hypercall commands and definitions.
+ *
+ *  Author:  George Coker, &lt;gscoker@alpha.ncsc.mil&gt;
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+#ifndef __FLASK_OP_H__
+#define __FLASK_OP_H__
+
+#include "../event_channel.h"
+
+#define XEN_FLASK_INTERFACE_VERSION 1
+
+<a  name="Struct_xen_flask_load"><strong>struct xen_flask_load</strong></a> {
+    XEN_GUEST_HANDLE(char) buffer;
+    uint32_t size;
+};
+
+<a  name="Struct_xen_flask_setenforce"><strong>struct xen_flask_setenforce</strong></a> {
+    uint32_t enforcing;
+};
+
+<a  name="Struct_xen_flask_sid_context"><strong>struct xen_flask_sid_context</strong></a> {
+    /* IN/OUT: sid to convert to/from string */
+    uint32_t sid;
+    /* IN: size of the context buffer
+     * OUT: actual size of the output context string
+     */
+    uint32_t size;
+    XEN_GUEST_HANDLE(char) context;
+};
+
+<a  name="Struct_xen_flask_access"><strong>struct xen_flask_access</strong></a> {
+    /* IN: access request */
+    uint32_t ssid;
+    uint32_t tsid;
+    uint32_t tclass;
+    uint32_t req;
+    /* OUT: AVC data */
+    uint32_t allowed;
+    uint32_t audit_allow;
+    uint32_t audit_deny;
+    uint32_t seqno;
+};
+
+<a  name="Struct_xen_flask_transition"><strong>struct xen_flask_transition</strong></a> {
+    /* IN: transition SIDs and class */
+    uint32_t ssid;
+    uint32_t tsid;
+    uint32_t tclass;
+    /* OUT: new SID */
+    uint32_t newsid;
+};
+
+<a  name="Struct_xen_flask_userlist"><strong>struct xen_flask_userlist</strong></a> {
+    /* IN: starting SID for list */
+    uint32_t start_sid;
+    /* IN: size of user string and output buffer
+     * OUT: number of SIDs returned */
+    uint32_t size;
+    union {
+        /* IN: user to enumerate SIDs */
+        XEN_GUEST_HANDLE(char) user;
+        /* OUT: SID list */
+        XEN_GUEST_HANDLE(uint32) sids;
+    } u;
+};
+
+<a  name="Struct_xen_flask_boolean"><strong>struct xen_flask_boolean</strong></a> {
+    /* IN/OUT: numeric identifier for boolean [GET/SET]
+     * If -1, name will be used and bool_id will be filled in. */
+    uint32_t bool_id;
+    /* OUT: current enforcing value of boolean [GET/SET] */
+    uint8_t enforcing;
+    /* OUT: pending value of boolean [GET/SET] */
+    uint8_t pending;
+    /* IN: new value of boolean [SET] */
+    uint8_t new_value;
+    /* IN: commit new value instead of only setting pending [SET] */
+    uint8_t commit;
+    /* IN: size of boolean name buffer [GET/SET]
+     * OUT: actual size of name [GET only] */
+    uint32_t size;
+    /* IN: if bool_id is -1, used to find boolean [GET/SET]
+     * OUT: textual name of boolean [GET only]
+     */
+    XEN_GUEST_HANDLE(char) name;
+};
+
+<a  name="Struct_xen_flask_setavc_threshold"><strong>struct xen_flask_setavc_threshold</strong></a> {
+    /* IN */
+    uint32_t threshold;
+};
+
+<a  name="Struct_xen_flask_hash_stats"><strong>struct xen_flask_hash_stats</strong></a> {
+    /* OUT */
+    uint32_t entries;
+    uint32_t buckets_used;
+    uint32_t buckets_total;
+    uint32_t max_chain_len;
+};
+
+<a  name="Struct_xen_flask_cache_stats"><strong>struct xen_flask_cache_stats</strong></a> {
+    /* IN */
+    uint32_t cpu;
+    /* OUT */
+    uint32_t lookups;
+    uint32_t hits;
+    uint32_t misses;
+    uint32_t allocations;
+    uint32_t reclaims;
+    uint32_t frees;
+};
+
+<a  name="Struct_xen_flask_ocontext"><strong>struct xen_flask_ocontext</strong></a> {
+    /* IN */
+    uint32_t ocon;
+    uint32_t sid;
+    uint64_t low, high;
+};
+
+<a  name="Struct_xen_flask_peersid"><strong>struct xen_flask_peersid</strong></a> {
+    /* IN */
+    <a href="include,public,event_channel.h.html#Typedef_evtchn_port_t">evtchn_port_t</a> evtchn;
+    /* OUT */
+    uint32_t sid;
+};
+
+<a  name="Struct_xen_flask_relabel"><strong>struct xen_flask_relabel</strong></a> {
+    /* IN */
+    uint32_t domid;
+    uint32_t sid;
+};
+
+<a  name="Struct_xen_flask_devicetree_label"><strong>struct xen_flask_devicetree_label</strong></a> {
+    /* IN */
+    uint32_t sid;
+    uint32_t length;
+    XEN_GUEST_HANDLE(char) path;
+};
+
+<a  name="Struct_xen_flask_op"><strong>struct xen_flask_op</strong></a> {
+    uint32_t cmd;
+#define FLASK_LOAD              1
+#define FLASK_GETENFORCE        2
+#define FLASK_SETENFORCE        3
+#define FLASK_CONTEXT_TO_SID    4
+#define FLASK_SID_TO_CONTEXT    5
+#define FLASK_ACCESS            6
+#define FLASK_CREATE            7
+#define FLASK_RELABEL           8
+#define FLASK_USER              9
+#define FLASK_POLICYVERS        10
+#define FLASK_GETBOOL           11
+#define FLASK_SETBOOL           12
+#define FLASK_COMMITBOOLS       13
+#define FLASK_MLS               14
+#define FLASK_DISABLE           15
+#define FLASK_GETAVC_THRESHOLD  16
+#define FLASK_SETAVC_THRESHOLD  17
+#define FLASK_AVC_HASHSTATS     18
+#define FLASK_AVC_CACHESTATS    19
+#define FLASK_MEMBER            20
+#define FLASK_ADD_OCONTEXT      21
+#define FLASK_DEL_OCONTEXT      22
+#define FLASK_GET_PEER_SID      23
+#define FLASK_RELABEL_DOMAIN    24
+#define FLASK_DEVICETREE_LABEL  25
+    uint32_t interface_version; /* XEN_FLASK_INTERFACE_VERSION */
+    union {
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_load">struct xen_flask_load</a> load;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_setenforce">struct xen_flask_setenforce</a> enforce;
+        /* FLASK_CONTEXT_TO_SID and FLASK_SID_TO_CONTEXT */
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_sid_context">struct xen_flask_sid_context</a> sid_context;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_access">struct xen_flask_access</a> access;
+        /* FLASK_CREATE, FLASK_RELABEL, FLASK_MEMBER */
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_transition">struct xen_flask_transition</a> transition;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_userlist">struct xen_flask_userlist</a> userlist;
+        /* FLASK_GETBOOL, FLASK_SETBOOL */
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_boolean">struct xen_flask_boolean</a> boolean;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_setavc_threshold">struct xen_flask_setavc_threshold</a> setavc_threshold;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_hash_stats">struct xen_flask_hash_stats</a> hash_stats;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_cache_stats">struct xen_flask_cache_stats</a> cache_stats;
+        /* FLASK_ADD_OCONTEXT, FLASK_DEL_OCONTEXT */
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_ocontext">struct xen_flask_ocontext</a> ocontext;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_peersid">struct xen_flask_peersid</a> peersid;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_relabel">struct xen_flask_relabel</a> relabel;
+        <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_devicetree_label">struct xen_flask_devicetree_label</a> devicetree_label;
+    } u;
+};
+typedef <a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_op">struct xen_flask_op</a> <a  name="Typedef_xen_flask_op_t"><strong>xen_flask_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,xsm,flask_op.h.html#Struct_xen_flask_op">xen_flask_op_t</a>);
+
+#endif
+</pre></body></html>

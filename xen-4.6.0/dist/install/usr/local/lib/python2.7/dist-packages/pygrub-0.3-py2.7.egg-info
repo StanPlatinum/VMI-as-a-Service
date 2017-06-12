@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pygrub
+Version: 0.3
+Summary: Boot loader that looks a lot like grub for Xen
+Home-page: UNKNOWN
+Author: Jeremy Katz
+Author-email: katzj@redhat.com
+License: GPL
+Description: UNKNOWN
+Platform: UNKNOWN

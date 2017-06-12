@@ -1,0 +1,625 @@
+<html><head><title>include/public/memory.h - arch-x86_64 - Xen public headers</title></head><body><pre>
+/******************************************************************************
+ * memory.h
+ * 
+ * Memory reservation and information.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Copyright (c) 2005, Keir Fraser &lt;keir@xensource.com&gt;
+ */
+
+#ifndef __XEN_PUBLIC_MEMORY_H__
+#define __XEN_PUBLIC_MEMORY_H__
+
+#include "xen.h"
+#include "physdev.h"
+
+/*
+ * Increase or decrease the specified domain's memory reservation. Returns the
+ * number of extents successfully allocated or freed.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_memory_reservation">struct xen_memory_reservation</a>.
+ */
+#define XENMEM_increase_reservation 0
+#define XENMEM_decrease_reservation 1
+#define XENMEM_populate_physmap     6
+
+#if __XEN_INTERFACE_VERSION__ &gt;= 0x00030209
+/*
+ * Maximum # bits addressable by the user of the allocated region (e.g., I/O 
+ * devices often have a 32-bit limitation even in 64-bit systems). If zero 
+ * then the user has no addressing restriction. This field is not used by 
+ * XENMEM_decrease_reservation.
+ */
+#define XENMEMF_address_bits(x)     (x)
+#define XENMEMF_get_address_bits(x) ((x) &amp; 0xffu)
+/* NUMA node to allocate from. */
+#define XENMEMF_node(x)     (((x) + 1) &lt;&lt; 8)
+#define XENMEMF_get_node(x) ((((x) &gt;&gt; 8) - 1) &amp; 0xffu)
+/* Flag to populate physmap with populate-on-demand entries */
+#define XENMEMF_populate_on_demand (1&lt;&lt;16)
+/* Flag to request allocation only from the node specified */
+#define XENMEMF_exact_node_request  (1&lt;&lt;17)
+#define XENMEMF_exact_node(n) (XENMEMF_node(n) | XENMEMF_exact_node_request)
+/* Flag to indicate the node specified is virtual node */
+#define XENMEMF_vnode  (1&lt;&lt;18)
+#endif
+
+<a  name="Struct_xen_memory_reservation"><strong>struct xen_memory_reservation</strong></a> {
+
+    /*
+     * XENMEM_increase_reservation:
+     *   OUT: MFN (*not* GMFN) bases of extents that were allocated
+     * XENMEM_decrease_reservation:
+     *   IN:  GMFN bases of extents to free
+     * XENMEM_populate_physmap:
+     *   IN:  GPFN bases of extents to populate with memory
+     *   OUT: GMFN bases of extents that were allocated
+     *   (NB. This command also updates the mach_to_phys translation table)
+     * XENMEM_claim_pages:
+     *   IN: must be zero
+     */
+    XEN_GUEST_HANDLE(xen_pfn_t) extent_start;
+
+    /* Number of extents, and size/alignment of each (2^extent_order pages). */
+    xen_ulong_t    nr_extents;
+    unsigned int   extent_order;
+
+#if __XEN_INTERFACE_VERSION__ &gt;= 0x00030209
+    /* XENMEMF flags. */
+    unsigned int   mem_flags;
+#else
+    unsigned int   address_bits;
+#endif
+
+    /*
+     * Domain whose reservation is being changed.
+     * Unprivileged domains can specify only DOMID_SELF.
+     */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a>        domid;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_memory_reservation">struct xen_memory_reservation</a> <a  name="Typedef_xen_memory_reservation_t"><strong>xen_memory_reservation_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_memory_reservation">xen_memory_reservation_t</a>);
+
+/*
+ * An atomic exchange of memory pages. If return code is zero then
+ * @out.extent_list provides GMFNs of the newly-allocated memory.
+ * Returns zero on complete success, otherwise a negative error code.
+ * On complete success then always @nr_exchanged == @in.nr_extents.
+ * On partial success @nr_exchanged indicates how much work was done.
+ */
+#define XENMEM_exchange             11
+<a  name="Struct_xen_memory_exchange"><strong>struct xen_memory_exchange</strong></a> {
+    /*
+     * [IN] Details of memory extents to be exchanged (GMFN bases).
+     * Note that @in.address_bits is ignored and unused.
+     */
+    <a href="include,public,memory.h.html#Struct_xen_memory_reservation">struct xen_memory_reservation</a> in;
+
+    /*
+     * [IN/OUT] Details of new memory extents.
+     * We require that:
+     *  1. @in.domid == @out.domid
+     *  2. @in.nr_extents  &lt;&lt; @in.extent_order == 
+     *     @out.nr_extents &lt;&lt; @out.extent_order
+     *  3. @in.extent_start and @out.extent_start lists must not overlap
+     *  4. @out.extent_start lists GPFN bases to be populated
+     *  5. @out.extent_start is overwritten with allocated GMFN bases
+     */
+    <a href="include,public,memory.h.html#Struct_xen_memory_reservation">struct xen_memory_reservation</a> out;
+
+    /*
+     * [OUT] Number of input extents that were successfully exchanged:
+     *  1. The first @nr_exchanged input extents were successfully
+     *     deallocated.
+     *  2. The corresponding first entries in the output extent list correctly
+     *     indicate the GMFNs that were successfully exchanged.
+     *  3. All other input and output extents are untouched.
+     *  4. If not all input exents are exchanged then the return code of this
+     *     command will be non-zero.
+     *  5. THIS FIELD MUST BE INITIALISED TO ZERO BY THE CALLER!
+     */
+    xen_ulong_t nr_exchanged;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_memory_exchange">struct xen_memory_exchange</a> <a  name="Typedef_xen_memory_exchange_t"><strong>xen_memory_exchange_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_memory_exchange">xen_memory_exchange_t</a>);
+
+/*
+ * Returns the maximum machine frame number of mapped RAM in this system.
+ * This command always succeeds (it never returns an error code).
+ * arg == NULL.
+ */
+#define XENMEM_maximum_ram_page     2
+
+/*
+ * Returns the current or maximum memory reservation, in pages, of the
+ * specified domain (may be DOMID_SELF). Returns -ve errcode on failure.
+ * arg == addr of <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a>.
+ */
+#define XENMEM_current_reservation  3
+#define XENMEM_maximum_reservation  4
+
+/*
+ * Returns the maximum GPFN in use by the guest, or -ve errcode on failure.
+ */
+#define XENMEM_maximum_gpfn         14
+
+/*
+ * Returns a list of MFN bases of 2MB extents comprising the machine_to_phys
+ * mapping table. Architectures which do not have a m2p table do not implement
+ * this command.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_machphys_mfn_list">xen_machphys_mfn_list_t</a>.
+ */
+#define XENMEM_machphys_mfn_list    5
+<a  name="Struct_xen_machphys_mfn_list"><strong>struct xen_machphys_mfn_list</strong></a> {
+    /*
+     * Size of the 'extent_start' array. Fewer entries will be filled if the
+     * machphys table is smaller than max_extents * 2MB.
+     */
+    unsigned int max_extents;
+
+    /*
+     * Pointer to buffer to fill with list of extent starts. If there are
+     * any large discontiguities in the machine address space, 2MB gaps in
+     * the machphys table will be represented by an MFN base of zero.
+     */
+    XEN_GUEST_HANDLE(xen_pfn_t) extent_start;
+
+    /*
+     * Number of extents written to the above array. This will be smaller
+     * than 'max_extents' if the machphys table is smaller than max_e * 2MB.
+     */
+    unsigned int nr_extents;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_machphys_mfn_list">struct xen_machphys_mfn_list</a> <a  name="Typedef_xen_machphys_mfn_list_t"><strong>xen_machphys_mfn_list_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_machphys_mfn_list">xen_machphys_mfn_list_t</a>);
+
+/*
+ * For a compat caller, this is identical to XENMEM_machphys_mfn_list.
+ *
+ * For a non compat caller, this functions similarly to
+ * XENMEM_machphys_mfn_list, but returns the mfns making up the compatibility
+ * m2p table.
+ */
+#define XENMEM_machphys_compat_mfn_list     25
+
+/*
+ * Returns the location in virtual address space of the machine_to_phys
+ * mapping table. Architectures which do not have a m2p table, or which do not
+ * map it by default into guest address space, do not implement this command.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_machphys_mapping">xen_machphys_mapping_t</a>.
+ */
+#define XENMEM_machphys_mapping     12
+<a  name="Struct_xen_machphys_mapping"><strong>struct xen_machphys_mapping</strong></a> {
+    xen_ulong_t v_start, v_end; /* Start and end virtual addresses.   */
+    xen_ulong_t max_mfn;        /* Maximum MFN that can be looked up. */
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_machphys_mapping">struct xen_machphys_mapping</a> <a  name="Typedef_xen_machphys_mapping_t"><strong>xen_machphys_mapping_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_machphys_mapping">xen_machphys_mapping_t</a>);
+
+/* Source mapping space. */
+/* ` <a  name="Enum_phys_map_space"><strong>enum phys_map_space</strong></a> { */
+#define XENMAPSPACE_shared_info  0 /* shared info page */
+#define XENMAPSPACE_grant_table  1 /* grant table page */
+#define XENMAPSPACE_gmfn         2 /* GMFN */
+#define XENMAPSPACE_gmfn_range   3 /* GMFN range, XENMEM_add_to_physmap only. */
+#define XENMAPSPACE_gmfn_foreign 4 /* GMFN from another dom,
+                                    * XENMEM_add_to_physmap_batch only. */
+/* ` } */
+
+/*
+ * Sets the GPFN at which a particular page appears in the specified guest's
+ * pseudophysical address space.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_add_to_physmap">xen_add_to_physmap_t</a>.
+ */
+#define XENMEM_add_to_physmap      7
+<a  name="Struct_xen_add_to_physmap"><strong>struct xen_add_to_physmap</strong></a> {
+    /* Which domain to change the mapping for. */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+
+    /* Number of pages to go through for gmfn_range */
+    uint16_t    size;
+
+    unsigned int space; /* =&gt; <a href="include,public,memory.h.html#Enum_phys_map_space">enum phys_map_space</a> */
+
+#define XENMAPIDX_grant_table_status 0x80000000
+
+    /* Index into space being mapped. */
+    xen_ulong_t idx;
+
+    /* GPFN in domid where the source mapping page should appear. */
+    xen_pfn_t     gpfn;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_add_to_physmap">struct xen_add_to_physmap</a> <a  name="Typedef_xen_add_to_physmap_t"><strong>xen_add_to_physmap_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_add_to_physmap">xen_add_to_physmap_t</a>);
+
+/* A batched version of add_to_physmap. */
+#define XENMEM_add_to_physmap_batch 23
+<a  name="Struct_xen_add_to_physmap_batch"><strong>struct xen_add_to_physmap_batch</strong></a> {
+    /* IN */
+    /* Which domain to change the mapping for. */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    uint16_t space; /* =&gt; <a href="include,public,memory.h.html#Enum_phys_map_space">enum phys_map_space</a> */
+
+    /* Number of pages to go through */
+    uint16_t size;
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> foreign_domid; /* IFF gmfn_foreign */
+
+    /* Indexes into space being mapped. */
+    XEN_GUEST_HANDLE(xen_ulong_t) idxs;
+
+    /* GPFN in domid where the source mapping page should appear. */
+    XEN_GUEST_HANDLE(xen_pfn_t) gpfns;
+
+    /* OUT */
+
+    /* Per index error code. */
+    XEN_GUEST_HANDLE(int) errs;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_add_to_physmap_batch">struct xen_add_to_physmap_batch</a> <a  name="Typedef_xen_add_to_physmap_batch_t"><strong>xen_add_to_physmap_batch_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_add_to_physmap_batch">xen_add_to_physmap_batch_t</a>);
+
+#if __XEN_INTERFACE_VERSION__ &lt; 0x00040400
+#define XENMEM_add_to_physmap_range XENMEM_add_to_physmap_batch
+#define xen_add_to_physmap_range xen_add_to_physmap_batch
+typedef <a href="include,public,memory.h.html#Struct_xen_add_to_physmap_batch">struct xen_add_to_physmap_batch</a> <a  name="Typedef_xen_add_to_physmap_range_t"><strong>xen_add_to_physmap_range_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_add_to_physmap_batch">xen_add_to_physmap_range_t</a>);
+#endif
+
+/*
+ * Unmaps the page appearing at a particular GPFN from the specified guest's
+ * pseudophysical address space.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_remove_from_physmap">xen_remove_from_physmap_t</a>.
+ */
+#define XENMEM_remove_from_physmap      15
+<a  name="Struct_xen_remove_from_physmap"><strong>struct xen_remove_from_physmap</strong></a> {
+    /* Which domain to change the mapping for. */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+
+    /* GPFN of the current mapping of the page. */
+    xen_pfn_t     gpfn;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_remove_from_physmap">struct xen_remove_from_physmap</a> <a  name="Typedef_xen_remove_from_physmap_t"><strong>xen_remove_from_physmap_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_remove_from_physmap">xen_remove_from_physmap_t</a>);
+
+/*** REMOVED ***/
+/*#define XENMEM_translate_gpfn_list  8*/
+
+/*
+ * Returns the pseudo-physical memory map as it was when the domain
+ * was started (specified by XENMEM_set_memory_map).
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_memory_map">xen_memory_map_t</a>.
+ */
+#define XENMEM_memory_map           9
+<a  name="Struct_xen_memory_map"><strong>struct xen_memory_map</strong></a> {
+    /*
+     * On call the number of entries which can be stored in buffer. On
+     * return the number of entries which have been stored in
+     * buffer.
+     */
+    unsigned int nr_entries;
+
+    /*
+     * Entries in the buffer are in the same format as returned by the
+     * BIOS INT 0x15 EAX=0xE820 call.
+     */
+    XEN_GUEST_HANDLE(void) buffer;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_memory_map">struct xen_memory_map</a> <a  name="Typedef_xen_memory_map_t"><strong>xen_memory_map_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_memory_map">xen_memory_map_t</a>);
+
+/*
+ * Returns the real physical memory map. Passes the same structure as
+ * XENMEM_memory_map.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_memory_map">xen_memory_map_t</a>.
+ */
+#define XENMEM_machine_memory_map   10
+
+/*
+ * Set the pseudo-physical memory map of a domain, as returned by
+ * XENMEM_memory_map.
+ * arg == addr of <a href="include,public,memory.h.html#Struct_xen_foreign_memory_map">xen_foreign_memory_map_t</a>.
+ */
+#define XENMEM_set_memory_map       13
+<a  name="Struct_xen_foreign_memory_map"><strong>struct xen_foreign_memory_map</strong></a> {
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    <a href="include,public,memory.h.html#Struct_xen_memory_map">struct xen_memory_map</a> map;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_foreign_memory_map">struct xen_foreign_memory_map</a> <a  name="Typedef_xen_foreign_memory_map_t"><strong>xen_foreign_memory_map_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_foreign_memory_map">xen_foreign_memory_map_t</a>);
+
+#define XENMEM_set_pod_target       16
+#define XENMEM_get_pod_target       17
+<a  name="Struct_xen_pod_target"><strong>struct xen_pod_target</strong></a> {
+    /* IN */
+    uint64_t target_pages;
+    /* OUT */
+    uint64_t tot_pages;
+    uint64_t pod_cache_pages;
+    uint64_t pod_entries;
+    /* IN */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_pod_target">struct xen_pod_target</a> xen_pod_target_t;
+
+#if defined(__XEN__) || defined(__XEN_TOOLS__)
+
+#ifndef uint64_aligned_t
+#define uint64_aligned_t uint64_t
+#endif
+
+/*
+ * Get the number of MFNs saved through memory sharing.
+ * The call never fails. 
+ */
+#define XENMEM_get_sharing_freed_pages    18
+#define XENMEM_get_sharing_shared_pages   19
+
+#define XENMEM_paging_op                    20
+#define XENMEM_paging_op_nominate           0
+#define XENMEM_paging_op_evict              1
+#define XENMEM_paging_op_prep               2
+
+<a  name="Struct_xen_mem_paging_op"><strong>struct xen_mem_paging_op</strong></a> {
+    uint8_t     op;         /* XENMEM_paging_op_* */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a>     domain;
+
+    /* PAGING_PREP IN: buffer to immediately fill page in */
+    uint64_aligned_t    buffer;
+    /* Other OPs */
+    uint64_aligned_t    gfn;           /* IN:  gfn of page being operated on */
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_mem_paging_op">struct xen_mem_paging_op</a> <a  name="Typedef_xen_mem_paging_op_t"><strong>xen_mem_paging_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_mem_paging_op">xen_mem_paging_op_t</a>);
+
+#define XENMEM_access_op                    21
+#define XENMEM_access_op_set_access         0
+#define XENMEM_access_op_get_access         1
+#define XENMEM_access_op_enable_emulate     2
+#define XENMEM_access_op_disable_emulate    3
+
+typedef enum {
+    XENMEM_access_n,
+    XENMEM_access_r,
+    XENMEM_access_w,
+    XENMEM_access_rw,
+    XENMEM_access_x,
+    XENMEM_access_rx,
+    XENMEM_access_wx,
+    XENMEM_access_rwx,
+    /*
+     * Page starts off as r-x, but automatically
+     * change to r-w on a write
+     */
+    XENMEM_access_rx2rw,
+    /*
+     * Log access: starts off as n, automatically
+     * goes to rwx, generating an event without
+     * pausing the vcpu
+     */
+    XENMEM_access_n2rwx,
+    /* Take the domain default */
+    XENMEM_access_default
+} xenmem_access_t;
+
+<a  name="Struct_xen_mem_access_op"><strong>struct xen_mem_access_op</strong></a> {
+    /* XENMEM_access_op_* */
+    uint8_t op;
+    /* xenmem_access_t */
+    uint8_t access;
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    /*
+     * Number of pages for set op
+     * Ignored on setting default access and other ops
+     */
+    uint32_t nr;
+    /*
+     * First pfn for set op
+     * pfn for get op
+     * ~0ull is used to set and get the default access for pages
+     */
+    uint64_aligned_t pfn;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_mem_access_op">struct xen_mem_access_op</a> <a  name="Typedef_xen_mem_access_op_t"><strong>xen_mem_access_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_mem_access_op">xen_mem_access_op_t</a>);
+
+#define XENMEM_sharing_op                   22
+#define XENMEM_sharing_op_nominate_gfn      0
+#define XENMEM_sharing_op_nominate_gref     1
+#define XENMEM_sharing_op_share             2
+#define XENMEM_sharing_op_debug_gfn         3
+#define XENMEM_sharing_op_debug_mfn         4
+#define XENMEM_sharing_op_debug_gref        5
+#define XENMEM_sharing_op_add_physmap       6
+#define XENMEM_sharing_op_audit             7
+
+#define XENMEM_SHARING_OP_S_HANDLE_INVALID  (-10)
+#define XENMEM_SHARING_OP_C_HANDLE_INVALID  (-9)
+
+/* The following allows sharing of grant refs. This is useful
+ * for sharing utilities sitting as "filters" in IO backends
+ * (e.g. memshr + blktap(2)). The IO backend is only exposed 
+ * to grant references, and this allows sharing of the grefs */
+#define XENMEM_SHARING_OP_FIELD_IS_GREF_FLAG   (1ULL &lt;&lt; 62)
+
+#define XENMEM_SHARING_OP_FIELD_MAKE_GREF(field, val)  \
+    (field) = (XENMEM_SHARING_OP_FIELD_IS_GREF_FLAG | val)
+#define XENMEM_SHARING_OP_FIELD_IS_GREF(field)         \
+    ((field) &amp; XENMEM_SHARING_OP_FIELD_IS_GREF_FLAG)
+#define XENMEM_SHARING_OP_FIELD_GET_GREF(field)        \
+    ((field) &amp; (~XENMEM_SHARING_OP_FIELD_IS_GREF_FLAG))
+
+<a  name="Struct_xen_mem_sharing_op"><strong>struct xen_mem_sharing_op</strong></a> {
+    uint8_t     op;     /* XENMEM_sharing_op_* */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a>     domain;
+
+    union {
+        struct mem_sharing_op_nominate {  /* OP_NOMINATE_xxx           */
+            union {
+                uint64_aligned_t gfn;     /* IN: gfn to nominate       */
+                uint32_t      grant_ref;  /* IN: grant ref to nominate */
+            } u;
+            uint64_aligned_t  handle;     /* OUT: the handle           */
+        } nominate;
+        struct mem_sharing_op_share {     /* OP_SHARE/ADD_PHYSMAP */
+            uint64_aligned_t source_gfn;    /* IN: the gfn of the source page */
+            uint64_aligned_t source_handle; /* IN: handle to the source page */
+            uint64_aligned_t client_gfn;    /* IN: the client gfn */
+            uint64_aligned_t client_handle; /* IN: handle to the client page */
+            <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a>  client_domain; /* IN: the client domain id */
+        } share; 
+        struct mem_sharing_op_debug {     /* OP_DEBUG_xxx */
+            union {
+                uint64_aligned_t gfn;      /* IN: gfn to debug          */
+                uint64_aligned_t mfn;      /* IN: mfn to debug          */
+                uint32_t gref;     /* IN: gref to debug         */
+            } u;
+        } debug;
+    } u;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_mem_sharing_op">struct xen_mem_sharing_op</a> <a  name="Typedef_xen_mem_sharing_op_t"><strong>xen_mem_sharing_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_mem_sharing_op">xen_mem_sharing_op_t</a>);
+
+/*
+ * Attempt to stake a claim for a domain on a quantity of pages
+ * of system RAM, but _not_ assign specific pageframes.  Only
+ * arithmetic is performed so the hypercall is very fast and need
+ * not be preemptible, thus sidestepping time-of-check-time-of-use
+ * races for memory allocation.  Returns 0 if the hypervisor page
+ * allocator has atomically and successfully claimed the requested
+ * number of pages, else non-zero.
+ *
+ * Any domain may have only one active claim.  When sufficient memory
+ * has been allocated to resolve the claim, the claim silently expires.
+ * Claiming zero pages effectively resets any outstanding claim and
+ * is always successful.
+ *
+ * Note that a valid claim may be staked even after memory has been
+ * allocated for a domain.  In this case, the claim is not incremental,
+ * i.e. if the domain's tot_pages is 3, and a claim is staked for 10,
+ * only 7 additional pages are claimed.
+ *
+ * Caller must be privileged or the hypercall fails.
+ */
+#define XENMEM_claim_pages                  24
+
+/*
+ * XENMEM_claim_pages flags - the are no flags at this time.
+ * The zero value is appropiate.
+ */
+
+/*
+ * With some legacy devices, certain guest-physical addresses cannot safely
+ * be used for other purposes, e.g. to map guest RAM.  This hypercall
+ * enumerates those regions so the toolstack can avoid using them.
+ */
+#define XENMEM_reserved_device_memory_map   27
+<a  name="Struct_xen_reserved_device_memory"><strong>struct xen_reserved_device_memory</strong></a> {
+    xen_pfn_t start_pfn;
+    xen_ulong_t nr_pages;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_reserved_device_memory">struct xen_reserved_device_memory</a> <a  name="Typedef_xen_reserved_device_memory_t"><strong>xen_reserved_device_memory_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_reserved_device_memory">xen_reserved_device_memory_t</a>);
+
+<a  name="Struct_xen_reserved_device_memory_map"><strong>struct xen_reserved_device_memory_map</strong></a> {
+#define XENMEM_RDM_ALL 1 /* Request all regions (ignore dev union). */
+    /* IN */
+    uint32_t flags;
+    /*
+     * IN/OUT
+     *
+     * Gets set to the required number of entries when too low,
+     * signaled by error code -ERANGE.
+     */
+    unsigned int nr_entries;
+    /* OUT */
+    XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_reserved_device_memory">xen_reserved_device_memory_t</a>) buffer;
+    /* IN */
+    union {
+        <a href="include,public,physdev.h.html#Struct_physdev_pci_device">struct physdev_pci_device</a> pci;
+    } dev;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_reserved_device_memory_map">struct xen_reserved_device_memory_map</a> <a  name="Typedef_xen_reserved_device_memory_map_t"><strong>xen_reserved_device_memory_map_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_reserved_device_memory_map">xen_reserved_device_memory_map_t</a>);
+
+#endif /* defined(__XEN__) || defined(__XEN_TOOLS__) */
+
+/*
+ * XENMEM_get_vnumainfo used by guest to get
+ * vNUMA topology from hypervisor.
+ */
+#define XENMEM_get_vnumainfo                26
+
+/* vNUMA node memory ranges */
+<a  name="Struct_xen_vmemrange"><strong>struct xen_vmemrange</strong></a> {
+    uint64_t start, end;
+    unsigned int flags;
+    unsigned int nid;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_vmemrange">struct xen_vmemrange</a> <a  name="Typedef_xen_vmemrange_t"><strong>xen_vmemrange_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_vmemrange">xen_vmemrange_t</a>);
+
+/*
+ * vNUMA topology specifies vNUMA node number, distance table,
+ * memory ranges and vcpu mapping provided for guests.
+ * XENMEM_get_vnumainfo hypercall expects to see from guest
+ * nr_vnodes, nr_vmemranges and nr_vcpus to indicate available memory.
+ * After filling guests structures, nr_vnodes, nr_vmemranges and nr_vcpus
+ * copied back to guest. Domain returns expected values of nr_vnodes,
+ * nr_vmemranges and nr_vcpus to guest if the values where incorrect.
+ */
+<a  name="Struct_xen_vnuma_topology_info"><strong>struct xen_vnuma_topology_info</strong></a> {
+    /* IN */
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    uint16_t pad;
+    /* IN/OUT */
+    unsigned int nr_vnodes;
+    unsigned int nr_vcpus;
+    unsigned int nr_vmemranges;
+    /* OUT */
+    union {
+        XEN_GUEST_HANDLE(uint) h;
+        uint64_t pad;
+    } vdistance;
+    union {
+        XEN_GUEST_HANDLE(uint) h;
+        uint64_t pad;
+    } vcpu_to_vnode;
+    union {
+        XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_vmemrange">xen_vmemrange_t</a>) h;
+        uint64_t pad;
+    } vmemrange;
+};
+typedef <a href="include,public,memory.h.html#Struct_xen_vnuma_topology_info">struct xen_vnuma_topology_info</a> <a  name="Typedef_xen_vnuma_topology_info_t"><strong>xen_vnuma_topology_info_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,memory.h.html#Struct_xen_vnuma_topology_info">xen_vnuma_topology_info_t</a>);
+
+/* Next available subop number is 28 */
+
+#endif /* __XEN_PUBLIC_MEMORY_H__ */
+
+/*
+ * Local variables:
+ * mode: C
+ * c-file-style: "BSD"
+ * c-basic-offset: 4
+ * tab-width: 4
+ * indent-tabs-mode: nil
+ * End:
+ */
+</pre></body></html>

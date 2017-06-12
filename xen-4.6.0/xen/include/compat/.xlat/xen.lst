@@ -1,0 +1,6 @@
+?	dom0_vga_console_info
+?	xenctl_bitmap
+?	mmu_update
+!	mmuext_op
+!	start_info
+?	vcpu_time_info

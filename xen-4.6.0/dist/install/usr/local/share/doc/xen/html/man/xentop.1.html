@@ -1,0 +1,172 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#OPTIONS">OPTIONS</a></li>
+  <li><a href="#INTERACTIVE-COMMANDS">INTERACTIVE COMMANDS</a></li>
+  <li><a href="#AUTHORS">AUTHORS</a></li>
+  <li><a href="#REPORTING-BUGS">REPORTING BUGS</a></li>
+  <li><a href="#COPYRIGHT">COPYRIGHT</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>xentop - displays real-time information about a Xen system and domains</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<p><b>xentop</b> [<b>-h</b>] [<b>-V</b>] [<b>-d</b>SECONDS] [<b>-n</b>] [<b>-r</b>] [<b>-v</b>] [<b>-f</b>] [<b>-b</b>] [<b>-i</b>ITERATIONS]</p>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p><b>xentop</b> displays information about the Xen system and domains, in a continually-updating manner. Command-line options and interactive commands can change the detail and format of the information displayed by <b>xentop</b>.</p>
+
+<h1 id="OPTIONS">OPTIONS</h1>
+
+<dl>
+
+<dt id="h---help"><b>-h</b>, <b>--help</b></dt>
+<dd>
+
+<p>display help and exit</p>
+
+</dd>
+<dt id="V---version"><b>-V</b>, <b>--version</b></dt>
+<dd>
+
+<p>output version information and exit</p>
+
+</dd>
+<dt id="d---delay-SECONDS"><b>-d</b>, <b>--delay</b>=<i>SECONDS</i></dt>
+<dd>
+
+<p>seconds between updates (default 3)</p>
+
+</dd>
+<dt id="n---networks"><b>-n</b>, <b>--networks</b></dt>
+<dd>
+
+<p>output network information</p>
+
+</dd>
+<dt id="x---vbds"><b>-x</b>, <b>--vbds</b></dt>
+<dd>
+
+<p>output vbd block device data</p>
+
+</dd>
+<dt id="r---repeat-header"><b>-r</b>, <b>--repeat-header</b></dt>
+<dd>
+
+<p>repeat table header before each domain</p>
+
+</dd>
+<dt id="v---vcpus"><b>-v</b>, <b>--vcpus</b></dt>
+<dd>
+
+<p>output VCPU data</p>
+
+</dd>
+<dt id="f---full-name"><b>-f</b>, <b>--full-name</b></dt>
+<dd>
+
+<p>output the full domain name (not truncated)</p>
+
+</dd>
+<dt id="b---batch"><b>-b</b>, <b>--batch</b></dt>
+<dd>
+
+<p>output data in batch mode (to stdout)</p>
+
+</dd>
+<dt id="i---iterations-ITERATIONS"><b>-i</b>, <b>--iterations</b>=<i>ITERATIONS</i></dt>
+<dd>
+
+<p>maximum number of iterations xentop should produce before ending</p>
+
+</dd>
+</dl>
+
+<h1 id="INTERACTIVE-COMMANDS">INTERACTIVE COMMANDS</h1>
+
+<p>All interactive commands are case-insensitive.</p>
+
+<dl>
+
+<dt id="D"><b>D</b></dt>
+<dd>
+
+<p>set delay between updates</p>
+
+</dd>
+<dt id="N"><b>N</b></dt>
+<dd>
+
+<p>toggle display of network information</p>
+
+</dd>
+<dt id="Q-Esc"><b>Q</b>, <b>Esc</b></dt>
+<dd>
+
+<p>quit</p>
+
+</dd>
+<dt id="R"><b>R</b></dt>
+<dd>
+
+<p>toggle table header before each domain</p>
+
+</dd>
+<dt id="S"><b>S</b></dt>
+<dd>
+
+<p>cycle sort order</p>
+
+</dd>
+<dt id="V"><b>V</b></dt>
+<dd>
+
+<p>toggle display of VCPU information</p>
+
+</dd>
+<dt id="Arrows"><b>Arrows</b></dt>
+<dd>
+
+<p>scroll domain display</p>
+
+</dd>
+</dl>
+
+<h1 id="AUTHORS">AUTHORS</h1>
+
+<p>Written by Judy Fischbach, David Hendricks, and Josh Triplett</p>
+
+<h1 id="REPORTING-BUGS">REPORTING BUGS</h1>
+
+<p>Report bugs to &lt;xen-devel@lists.xen.org&gt;.</p>
+
+<h1 id="COPYRIGHT">COPYRIGHT</h1>
+
+<p>Copyright 2005 International Business Machines Corp</p>
+
+<p>This is free software; see the source for copying conditions. There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
+
+
+</body>
+
+</html>
+
+

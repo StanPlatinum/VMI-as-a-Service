@@ -1,0 +1,262 @@
+
+Intel ACPI Component Architecture
+ASL Optimizing Compiler version 20140214-64 [Mar 29 2014]
+Copyright (c) 2000 - 2014 Intel Corporation
+
+Compilation of "ssdt-misc.dsl.i" - Wed May 17 19:45:04 2017
+
+       2:  /* ACPI_EXTRACT_ALL_CODE ssdp_misc_aml */
+       4:  DefinitionBlock ("ssdt-misc.aml", "SSDT", 0x01, "BXPC", "BXSSDTSUSP", 0x1)
+
+00000000:  53 53 44 54 6C 01 00 00     "SSDTl..."
+00000008:  01 1D 42 58 50 43 00 00     "..BXPC.."
+00000010:  42 58 53 53 44 54 53 55     "BXSSDTSU"
+00000018:  01 00 00 00 49 4E 54 4C     "....INTL"
+00000020:  14 02 14 20 ............    "... "
+
+       5:  {
+       6:      Scope(\) {
+
+00000024:  10 4C 05 5C 00 .........    ".L.\."
+
+       7:         
+       8:  /* ACPI_EXTRACT_NAME_DWORD_CONST acpi_pci32_start */
+      10:         Name(P0S, 0x12345678)
+
+00000029:  08 50 30 53 5F 0C 78 56     ".P0S_.xV"
+00000031:  34 12 ..................    "4."
+
+      11:         
+      12:  /* ACPI_EXTRACT_NAME_DWORD_CONST acpi_pci32_end */
+      14:         Name(P0E, 0x12345678)
+
+00000033:  08 50 30 45 5F 0C 78 56     ".P0E_.xV"
+0000003B:  34 12 ..................    "4."
+
+      15:         
+      16:  /* ACPI_EXTRACT_NAME_BYTE_CONST acpi_pci64_valid */
+      18:         Name(P1V, 0x12)
+
+0000003D:  08 50 31 56 5F 0A 12 ...    ".P1V_.."
+
+      19:         
+      20:  /* ACPI_EXTRACT_NAME_BUFFER8 acpi_pci64_start */
+      22:         Name(P1S, Buffer() { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })
+
+00000044:  08 50 31 53 5F .........    ".P1S_"
+00000049:  11 0B 0A 08 00 00 00 00     "........"
+00000051:  00 00 00 00 ............    "...."
+
+      23:         
+      24:  /* ACPI_EXTRACT_NAME_BUFFER8 acpi_pci64_end */
+      26:         Name(P1E, Buffer() { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })
+
+00000055:  08 50 31 45 5F .........    ".P1E_"
+0000005A:  11 0B 0A 08 00 00 00 00     "........"
+00000062:  00 00 00 00 ............    "...."
+
+      27:         
+      28:  /* ACPI_EXTRACT_NAME_BUFFER8 acpi_pci64_length */
+      30:         Name(P1L, Buffer() { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })
+
+00000066:  08 50 31 4C 5F .........    ".P1L_"
+0000006B:  11 0B 0A 08 00 00 00 00     "........"
+00000073:  00 00 00 00 ............    "...."
+
+      31:         
+      32:  /* ACPI_EXTRACT_NAME_DWORD_CONST ssdt_mctrl_nr_slots */
+      34:         Name(MDNR, 0x12345678)
+
+00000077:  08 4D 44 4E 52 0C 78 56     ".MDNR.xV"
+0000007F:  34 12 ..................    "4."
+
+      35:      }
+      36:      Scope(\) {
+
+00000081:  10 29 5C 00 ............    ".)\."
+
+      37:          
+      38:  /* ACPI_EXTRACT_NAME_STRING acpi_s3_name */
+      40:          Name(_S3, Package(0x04) {
+      41:              One,
+      42:              One,
+      43:              Zero,
+      44:              Zero
+      45:          })
+
+00000085:  08 5F 53 33 5F .........    "._S3_"
+0000008A:  12 06 04 01 01 00 00 ...    "......."
+
+      46:          
+      47:  /* ACPI_EXTRACT_NAME_STRING acpi_s4_name */
+      49:          
+      50:  /* ACPI_EXTRACT_PKG_START acpi_s4_pkg */
+      52:          Name(_S4, Package(0x04) {
+      53:              0x2,
+      54:              0x2,
+      55:              Zero,
+      56:              Zero
+      57:          })
+
+00000091:  08 5F 53 34 5F .........    "._S4_"
+00000096:  12 08 04 0A 02 0A 02 00     "........"
+0000009E:  00 .....................    "."
+
+      58:          Name(_S5, Package(0x04) {
+      59:              Zero,
+      60:              Zero,
+      61:              Zero,
+      62:              Zero
+      63:          })
+
+0000009F:  08 5F 53 35 5F .........    "._S5_"
+000000A4:  12 06 04 00 00 00 00 ...    "......."
+
+      64:      }
+      65:      External(\_SB.PCI0, DeviceObj)
+      66:      External(\_SB.PCI0.ISA, DeviceObj)
+      67:      Scope(\_SB.PCI0.ISA) {
+
+000000AB:  10 40 0C 5C 2F 03 5F 53     ".@.\/._S"
+000000B3:  42 5F 50 43 49 30 49 53     "B_PCI0IS"
+000000BB:  41 5F ..................    "A_"
+
+      68:          Device(PEVT) {
+
+000000BD:  5B 82 4D 0A 50 45 56 54     "[.M.PEVT"
+
+      69:              Name(_HID, "QEMU0001")
+
+000000C5:  08 5F 48 49 44 0D 51 45     "._HID.QE"
+000000CD:  4D 55 30 30 30 31 00 ...    "MU0001."
+
+      70:              
+      71:  /* ACPI_EXTRACT_NAME_WORD_CONST ssdt_isa_pest */
+      73:              Name(PEST, 0xFFFF)
+
+000000D4:  08 50 45 53 54 0B FF FF     ".PEST..."
+
+      74:              OperationRegion(PEOR, SystemIO, PEST, 0x01)
+
+[****iasl****]
+ssdt-misc.dsl.i     73:             OperationRegion(PEOR, SystemIO, PEST, 0x01)
+Optimize 1039 -                 Integer optimized to single-byte AML opcode ^  (One)
+
+
+
+000000DC:  5B 80 50 45 4F 52 01 50     "[.PEOR.P"
+000000E4:  45 53 54 01 ............    "EST."
+
+      75:              Field(PEOR, ByteAcc, NoLock, Preserve) {
+      76:                  PEPT, 8,
+      77:              }
+
+000000E8:  5B 81 0B 50 45 4F 52 01     "[..PEOR."
+000000F0:  50 45 50 54 08 .........    "PEPT."
+
+      78:              Method(_STA, 0, NotSerialized) {
+
+000000F5:  14 18 5F 53 54 41 00 ...    ".._STA."
+
+      79:                  Store(PEST, Local0)
+
+000000FC:  70 50 45 53 54 60 ......    "pPEST`"
+
+      80:                  If (LEqual(Local0, Zero)) {
+
+00000102:  A0 06 ..................    ".."
+00000104:  93 60 00 ...............    ".`."
+
+      81:                      Return (0x00)
+
+[****iasl****]
+ssdt-misc.dsl.i     80:                     Return (0x00)
+Optimize 1039 -                                       ^ Integer optimized to single-byte AML opcode (Zero)
+
+
+
+00000107:  A4 00 ..................    ".."
+
+      82:                  } Else {
+      83:                      Return (0x0F)
+
+00000109:  A1 04 ..................    ".."
+0000010B:  A4 0A 0F ...............    "..."
+
+      84:                  }
+      85:              }
+      86:              Method(RDPT, 0, NotSerialized) {
+
+0000010E:  14 0E 52 44 50 54 00 ...    "..RDPT."
+
+      87:                  Store(PEPT, Local0)
+
+00000115:  70 50 45 50 54 60 ......    "pPEPT`"
+
+      88:                  Return (Local0)
+
+0000011B:  A4 60 ..................    ".`"
+
+      89:              }
+      90:              Method(WRPT, 1, NotSerialized) {
+
+0000011D:  14 0C 57 52 50 54 01 ...    "..WRPT."
+
+      91:                  Store(Arg0, PEPT)
+
+00000124:  70 68 50 45 50 54 ......    "phPEPT"
+
+      92:              }
+      93:              Name(_CRS, ResourceTemplate() {
+
+0000012A:  08 5F 43 52 53 11 0D 0A     "._CRS..."
+00000132:  0A .....................    "."
+
+      94:                  IO(Decode16, 0x00, 0x00, 0x01, 0x01, IO)
+
+00000133:  47 01 00 00 00 00 01 01     "G......."
+0000013B:  79 00 ..................    "y."
+
+      95:              })
+      96:              CreateWordField(_CRS, IO._MIN, IOMN)
+
+0000013D:  8B 5F 43 52 53 0A 02 49     "._CRS..I"
+00000145:  4F 4D 4E ...............    "OMN"
+
+      97:              CreateWordField(_CRS, IO._MAX, IOMX)
+
+00000148:  8B 5F 43 52 53 0A 04 49     "._CRS..I"
+00000150:  4F 4D 58 ...............    "OMX"
+
+      98:              Method(_INI, 0, NotSerialized) {
+
+00000153:  14 18 5F 49 4E 49 00 ...    ".._INI."
+
+      99:                  Store(PEST, IOMN)
+
+0000015A:  70 50 45 53 54 49 4F 4D     "pPESTIOM"
+00000162:  4E .....................    "N"
+
+     100:                  Store(PEST, IOMX)
+
+00000163:  70 50 45 53 54 49 4F 4D     "pPESTIOM"
+0000016B:  58 .....................    "X"
+     101:              }
+     102:          }
+     103:      }
+     104:  }
+
+
+
+Summary of errors and warnings
+
+
+ASL Optimizing Compiler version 20140214-64 [Mar 29 2014]
+
+ASL Input:     ssdt-misc.dsl.i - 105 lines, 2662 bytes, 36 keywords
+AML Output:    ssdt-misc.aml - 364 bytes, 25 named objects, 11 executable opcodes
+Listing File:  ssdt-misc.lst - 7667 bytes
+Hex Dump:      ssdt-misc.hex - 223 bytes
+
+Compilation complete. 0 Errors, 0 Warnings, 0 Remarks, 2 Optimizations
+

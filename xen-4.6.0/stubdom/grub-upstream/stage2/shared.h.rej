@@ -1,0 +1,39 @@
+--- stage2/shared.h	2004-06-19 17:40:09.000000000 +0100
++++ stage2/shared.h	2008-03-28 13:22:28.000000000 +0000
+@@ -499,7 +499,11 @@ struct vbe_mode
+   unsigned char linear_reserved_field_position;
+   unsigned long max_pixel_clock;
+ 
+-  unsigned char reserved3[189];
++  /* Reserved field to make structure to be 256 bytes long, VESA BIOS 
++     Extension 3.0 Specification says to reserve 189 bytes here but 
++     that doesn't make structure to be 256 bytes.  So additional one is 
++     added here.  */
++  unsigned char reserved3[189 + 1];
+ } __attribute__ ((packed));
+ 
+ 
+@@ -807,7 +811,7 @@ int checkkey (void);
+ /* Low-level disk I/O */
+ int get_diskinfo (int drive, struct geometry *geometry);
+ int biosdisk (int subfunc, int drive, struct geometry *geometry,
+-	      int sector, int nsec, int segment);
++	      unsigned int sector, int nsec, int segment);
+ void stop_floppy (void);
+ 
+ /* Command-line interface functions. */
+@@ -920,10 +924,10 @@ int gunzip_test_header (void);
+ int gunzip_read (char *buf, int len);
+ #endif /* NO_DECOMPRESSION */
+ 
+-int rawread (int drive, int sector, int byte_offset, int byte_len, char *buf);
+-int devread (int sector, int byte_offset, int byte_len, char *buf);
+-int rawwrite (int drive, int sector, char *buf);
+-int devwrite (int sector, int sector_len, char *buf);
++int rawread (int drive, unsigned int sector, int byte_offset, int byte_len, char *buf);
++int devread (unsigned int sector, int byte_offset, int byte_len, char *buf);
++int rawwrite (int drive, unsigned int sector, char *buf);
++int devwrite (unsigned int sector, int sector_len, char *buf);
+ 
+ /* Parse a device string and initialize the global parameters. */
+ char *set_device (char *device);

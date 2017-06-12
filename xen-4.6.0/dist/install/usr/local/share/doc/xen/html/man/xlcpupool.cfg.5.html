@@ -1,0 +1,170 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#SYNTAX">SYNTAX</a></li>
+  <li><a href="#OPTIONS">OPTIONS</a>
+    <ul>
+      <li><a href="#Mandatory-Configuration-Items">Mandatory Configuration Items</a></li>
+      <li><a href="#Optional-Configuration-Items">Optional Configuration Items</a></li>
+    </ul>
+  </li>
+  <li><a href="#FILES">FILES</a></li>
+  <li><a href="#BUGS">BUGS</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>xlcpupool.cfg - XL Cpupool Configuration File Syntax</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<pre><code> /etc/xen/xlcpupool</code></pre>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p>To create a Cpupool with xl requires the provision of a cpupool config file. Typically these live in `/etc/xen/CPUPOOL.cfg` where CPUPOOL is the name of the cpupool.</p>
+
+<h1 id="SYNTAX">SYNTAX</h1>
+
+<p>A cpupool config file consists of a series of <code>KEY=VALUE</code> pairs.</p>
+
+<p>A value <code>VALUE</code> is one of:</p>
+
+<dl>
+
+<dt id="STRING"><b>&quot;STRING&quot;</b></dt>
+<dd>
+
+<p>A string, surrounded by either single or double quotes.</p>
+
+</dd>
+<dt id="NUMBER"><b>NUMBER</b></dt>
+<dd>
+
+<p>A number, in either decimal, octal (using a <code>0</code> prefix) or hexadecimal (using an <code>0x</code> prefix).</p>
+
+</dd>
+<dt id="VALUE-VALUE"><b>[ VALUE, VALUE, ... ]</b></dt>
+<dd>
+
+<p>A list of <code>VALUES</code> of the above types. Lists are homogeneous and are not nested.</p>
+
+</dd>
+</dl>
+
+<p>The semantics of each <code>KEY</code> defines which form of <code>VALUE</code> is required.</p>
+
+<h1 id="OPTIONS">OPTIONS</h1>
+
+<h2 id="Mandatory-Configuration-Items">Mandatory Configuration Items</h2>
+
+<p>The following key is mandatory for any cpupool:</p>
+
+<dl>
+
+<dt id="name-NAME"><b>name=&quot;NAME&quot;</b></dt>
+<dd>
+
+<p>Specifies the name of the cpupool. Names of cpupools existing on a single host must be unique.</p>
+
+</dd>
+</dl>
+
+<h2 id="Optional-Configuration-Items">Optional Configuration Items</h2>
+
+<p>The following options apply to guests of any type.</p>
+
+<dl>
+
+<dt id="sched-SCHED"><b>sched=&quot;SCHED&quot;</b></dt>
+<dd>
+
+<p>Specifies the scheduler which is used for the cpupool. Valid values for <code>SCHED</code> are:</p>
+
+<dl>
+
+<dt id="credit"><b>credit</b></dt>
+<dd>
+
+<p>the credit scheduler</p>
+
+</dd>
+<dt id="credit2"><b>credit2</b></dt>
+<dd>
+
+<p>the credit2 scheduler</p>
+
+</dd>
+<dt id="rtds"><b>rtds</b></dt>
+<dd>
+
+<p>the RTDS scheduler</p>
+
+</dd>
+</dl>
+
+<p>The default scheduler is the one used for <code>Pool-0</code> specified as boot parameter of the hypervisor.</p>
+
+</dd>
+<dt id="nodes-NODES"><b>nodes=&quot;NODES&quot;</b></dt>
+<dd>
+
+<p>Specifies the cpus of the NUMA-nodes given in <code>NODES</code> (an integer or a list of integers) to be member of the cpupool. The free cpus in the specified nodes are allocated in the new cpupool.</p>
+
+</dd>
+<dt id="cpus-CPU-LIST"><b>cpus=&quot;CPU-LIST&quot;</b></dt>
+<dd>
+
+<p>Specifies the cpus that will be member of the cpupool. All the specified cpus must be free, or creation will fail. <code>CPU-LIST</code> may be specified as follows:</p>
+
+<dl>
+
+<dt id="pod-2-3-5">[&quot;2&quot;, &quot;3&quot;, &quot;5&quot;]</dt>
+<dd>
+
+<p>means that cpus 2,3,5 will be member of the cpupool.</p>
+
+</dd>
+<dt id="pod0-3-5-1">&quot;0-3,5,^1&quot;</dt>
+<dd>
+
+<p>means that cpus 0,2,3 and 5 will be member of the cpupool. A &quot;node:&quot; or &quot;nodes:&quot; modifier can be used. E.g., &quot;0,node:1,nodes:2-3,^10-13&quot; means that pcpus 0, plus all the cpus of NUMA nodes 1,2,3 with the exception of cpus 10,11,12,13 will be memeber of the cpupool.</p>
+
+</dd>
+</dl>
+
+<p>If neither <b>nodes</b> nor <b>cpus</b> are specified only the first free cpu found will be allocated in the new cpupool.</p>
+
+</dd>
+</dl>
+
+<h1 id="FILES">FILES</h1>
+
+<p><i>/etc/xen/CPUPOOL.cfg</i></p>
+
+<h1 id="BUGS">BUGS</h1>
+
+<p>This document is a work in progress and contains items which require further documentation and which are generally incomplete (marked with XXX). However all options are included here whether or not they are fully documented.</p>
+
+<p>Patches to improve incomplete items (or any other item) would be gratefully received on the xen-devel@lists.xen.org mailing list. Please see <a href="http://wiki.xen.org/wiki/SubmittingXenPatches">http://wiki.xen.org/wiki/SubmittingXenPatches</a> for information on how to submit a patch to Xen.</p>
+
+
+</body>
+
+</html>
+
+

@@ -1,0 +1,389 @@
+<html><head><title>include/public/physdev.h - arch-arm - Xen public headers</title></head><body><pre>
+/*
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Copyright (c) 2006, Keir Fraser
+ */
+
+#ifndef __XEN_PUBLIC_PHYSDEV_H__
+#define __XEN_PUBLIC_PHYSDEV_H__
+
+#include "xen.h"
+
+/*
+ * Prototype for this hypercall is:
+ *  int physdev_op(int cmd, void *args)
+ * @cmd  == PHYSDEVOP_??? (physdev operation).
+ * @args == Operation-specific extra arguments (NULL if none).
+ */
+
+/*
+ * Notify end-of-interrupt (EOI) for the specified IRQ.
+ * @arg == pointer to physdev_eoi structure.
+ */
+#define PHYSDEVOP_eoi                   12
+<a  name="Struct_physdev_eoi"><strong>struct physdev_eoi</strong></a> {
+    /* IN */
+    uint32_t irq;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_eoi">struct physdev_eoi</a> <a  name="Typedef_physdev_eoi_t"><strong>physdev_eoi_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_eoi">physdev_eoi_t</a>);
+
+/*
+ * Register a shared page for the hypervisor to indicate whether the guest
+ * must issue PHYSDEVOP_eoi. The semantics of PHYSDEVOP_eoi change slightly
+ * once the guest used this function in that the associated event channel
+ * will automatically get unmasked. The page registered is used as a bit
+ * array indexed by Xen's PIRQ value.
+ */
+#define PHYSDEVOP_pirq_eoi_gmfn_v1       17
+/*
+ * Register a shared page for the hypervisor to indicate whether the
+ * guest must issue PHYSDEVOP_eoi. This hypercall is very similar to
+ * PHYSDEVOP_pirq_eoi_gmfn_v1 but it doesn't change the semantics of
+ * PHYSDEVOP_eoi. The page registered is used as a bit array indexed by
+ * Xen's PIRQ value.
+ */
+#define PHYSDEVOP_pirq_eoi_gmfn_v2       28
+<a  name="Struct_physdev_pirq_eoi_gmfn"><strong>struct physdev_pirq_eoi_gmfn</strong></a> {
+    /* IN */
+    <a href="include,public,arch-arm.h.html#Typedef_xen_pfn_t">xen_pfn_t</a> gmfn;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_pirq_eoi_gmfn">struct physdev_pirq_eoi_gmfn</a> <a  name="Typedef_physdev_pirq_eoi_gmfn_t"><strong>physdev_pirq_eoi_gmfn_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_pirq_eoi_gmfn">physdev_pirq_eoi_gmfn_t</a>);
+
+/*
+ * Query the status of an IRQ line.
+ * @arg == pointer to physdev_irq_status_query structure.
+ */
+#define PHYSDEVOP_irq_status_query       5
+<a  name="Struct_physdev_irq_status_query"><strong>struct physdev_irq_status_query</strong></a> {
+    /* IN */
+    uint32_t irq;
+    /* OUT */
+    uint32_t flags; /* XENIRQSTAT_* */
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_irq_status_query">struct physdev_irq_status_query</a> <a  name="Typedef_physdev_irq_status_query_t"><strong>physdev_irq_status_query_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_irq_status_query">physdev_irq_status_query_t</a>);
+
+/* Need to call PHYSDEVOP_eoi when the IRQ has been serviced? */
+#define _XENIRQSTAT_needs_eoi   (0)
+#define  XENIRQSTAT_needs_eoi   (1U&lt;&lt;_XENIRQSTAT_needs_eoi)
+
+/* IRQ shared by multiple guests? */
+#define _XENIRQSTAT_shared      (1)
+#define  XENIRQSTAT_shared      (1U&lt;&lt;_XENIRQSTAT_shared)
+
+/*
+ * Set the current VCPU's I/O privilege level.
+ * @arg == pointer to physdev_set_iopl structure.
+ */
+#define PHYSDEVOP_set_iopl               6
+<a  name="Struct_physdev_set_iopl"><strong>struct physdev_set_iopl</strong></a> {
+    /* IN */
+    uint32_t iopl;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_set_iopl">struct physdev_set_iopl</a> <a  name="Typedef_physdev_set_iopl_t"><strong>physdev_set_iopl_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_set_iopl">physdev_set_iopl_t</a>);
+
+/*
+ * Set the current VCPU's I/O-port permissions bitmap.
+ * @arg == pointer to physdev_set_iobitmap structure.
+ */
+#define PHYSDEVOP_set_iobitmap           7
+<a  name="Struct_physdev_set_iobitmap"><strong>struct physdev_set_iobitmap</strong></a> {
+    /* IN */
+#if __XEN_INTERFACE_VERSION__ &gt;= 0x00030205
+    XEN_GUEST_HANDLE(uint8) bitmap;
+#else
+    uint8_t *bitmap;
+#endif
+    uint32_t nr_ports;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_set_iobitmap">struct physdev_set_iobitmap</a> <a  name="Typedef_physdev_set_iobitmap_t"><strong>physdev_set_iobitmap_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_set_iobitmap">physdev_set_iobitmap_t</a>);
+
+/*
+ * Read or write an IO-APIC register.
+ * @arg == pointer to physdev_apic structure.
+ */
+#define PHYSDEVOP_apic_read              8
+#define PHYSDEVOP_apic_write             9
+<a  name="Struct_physdev_apic"><strong>struct physdev_apic</strong></a> {
+    /* IN */
+    unsigned long apic_physbase;
+    uint32_t reg;
+    /* IN or OUT */
+    uint32_t value;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_apic">struct physdev_apic</a> <a  name="Typedef_physdev_apic_t"><strong>physdev_apic_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_apic">physdev_apic_t</a>);
+
+/*
+ * Allocate or free a physical upcall vector for the specified IRQ line.
+ * @arg == pointer to physdev_irq structure.
+ */
+#define PHYSDEVOP_alloc_irq_vector      10
+#define PHYSDEVOP_free_irq_vector       11
+<a  name="Struct_physdev_irq"><strong>struct physdev_irq</strong></a> {
+    /* IN */
+    uint32_t irq;
+    /* IN or OUT */
+    uint32_t vector;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_irq">struct physdev_irq</a> <a  name="Typedef_physdev_irq_t"><strong>physdev_irq_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_irq">physdev_irq_t</a>);
+ 
+#define MAP_PIRQ_TYPE_MSI               0x0
+#define MAP_PIRQ_TYPE_GSI               0x1
+#define MAP_PIRQ_TYPE_UNKNOWN           0x2
+#define MAP_PIRQ_TYPE_MSI_SEG           0x3
+#define MAP_PIRQ_TYPE_MULTI_MSI         0x4
+
+#define PHYSDEVOP_map_pirq               13
+<a  name="Struct_physdev_map_pirq"><strong>struct physdev_map_pirq</strong></a> {
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    /* IN */
+    int type;
+    /* IN (ignored for ..._MULTI_MSI) */
+    int index;
+    /* IN or OUT */
+    int pirq;
+    /* IN - high 16 bits hold segment for ..._MSI_SEG and ..._MULTI_MSI */
+    int bus;
+    /* IN */
+    int devfn;
+    /* IN (also OUT for ..._MULTI_MSI) */
+    int entry_nr;
+    /* IN */
+    uint64_t table_base;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_map_pirq">struct physdev_map_pirq</a> <a  name="Typedef_physdev_map_pirq_t"><strong>physdev_map_pirq_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_map_pirq">physdev_map_pirq_t</a>);
+
+#define PHYSDEVOP_unmap_pirq             14
+<a  name="Struct_physdev_unmap_pirq"><strong>struct physdev_unmap_pirq</strong></a> {
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domid;
+    /* IN */
+    int pirq;
+};
+
+typedef <a href="include,public,physdev.h.html#Struct_physdev_unmap_pirq">struct physdev_unmap_pirq</a> <a  name="Typedef_physdev_unmap_pirq_t"><strong>physdev_unmap_pirq_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_unmap_pirq">physdev_unmap_pirq_t</a>);
+
+#define PHYSDEVOP_manage_pci_add         15
+#define PHYSDEVOP_manage_pci_remove      16
+<a  name="Struct_physdev_manage_pci"><strong>struct physdev_manage_pci</strong></a> {
+    /* IN */
+    uint8_t bus;
+    uint8_t devfn;
+}; 
+
+typedef <a href="include,public,physdev.h.html#Struct_physdev_manage_pci">struct physdev_manage_pci</a> <a  name="Typedef_physdev_manage_pci_t"><strong>physdev_manage_pci_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_manage_pci">physdev_manage_pci_t</a>);
+
+#define PHYSDEVOP_restore_msi            19
+<a  name="Struct_physdev_restore_msi"><strong>struct physdev_restore_msi</strong></a> {
+    /* IN */
+    uint8_t bus;
+    uint8_t devfn;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_restore_msi">struct physdev_restore_msi</a> <a  name="Typedef_physdev_restore_msi_t"><strong>physdev_restore_msi_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_restore_msi">physdev_restore_msi_t</a>);
+
+#define PHYSDEVOP_manage_pci_add_ext     20
+<a  name="Struct_physdev_manage_pci_ext"><strong>struct physdev_manage_pci_ext</strong></a> {
+    /* IN */
+    uint8_t bus;
+    uint8_t devfn;
+    unsigned is_extfn;
+    unsigned is_virtfn;
+    struct {
+        uint8_t bus;
+        uint8_t devfn;
+    } physfn;
+};
+
+typedef <a href="include,public,physdev.h.html#Struct_physdev_manage_pci_ext">struct physdev_manage_pci_ext</a> <a  name="Typedef_physdev_manage_pci_ext_t"><strong>physdev_manage_pci_ext_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_manage_pci_ext">physdev_manage_pci_ext_t</a>);
+
+/*
+ * Argument to physdev_op_compat() hypercall. Superceded by new physdev_op()
+ * hypercall since 0x00030202.
+ */
+<a  name="Struct_physdev_op"><strong>struct physdev_op</strong></a> {
+    uint32_t cmd;
+    union {
+        <a href="include,public,physdev.h.html#Struct_physdev_irq_status_query">struct physdev_irq_status_query</a>      irq_status_query;
+        <a href="include,public,physdev.h.html#Struct_physdev_set_iopl">struct physdev_set_iopl</a>              set_iopl;
+        <a href="include,public,physdev.h.html#Struct_physdev_set_iobitmap">struct physdev_set_iobitmap</a>          set_iobitmap;
+        <a href="include,public,physdev.h.html#Struct_physdev_apic">struct physdev_apic</a>                  apic_op;
+        <a href="include,public,physdev.h.html#Struct_physdev_irq">struct physdev_irq</a>                   irq_op;
+    } u;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_op">struct physdev_op</a> <a  name="Typedef_physdev_op_t"><strong>physdev_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_op">physdev_op_t</a>);
+
+#define PHYSDEVOP_setup_gsi    21
+<a  name="Struct_physdev_setup_gsi"><strong>struct physdev_setup_gsi</strong></a> {
+    int gsi;
+    /* IN */
+    uint8_t triggering;
+    /* IN */
+    uint8_t polarity;
+    /* IN */
+};
+
+typedef <a href="include,public,physdev.h.html#Struct_physdev_setup_gsi">struct physdev_setup_gsi</a> <a  name="Typedef_physdev_setup_gsi_t"><strong>physdev_setup_gsi_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_setup_gsi">physdev_setup_gsi_t</a>);
+
+/* leave PHYSDEVOP 22 free */
+
+/* type is MAP_PIRQ_TYPE_GSI or MAP_PIRQ_TYPE_MSI
+ * the hypercall returns a free pirq */
+#define PHYSDEVOP_get_free_pirq    23
+<a  name="Struct_physdev_get_free_pirq"><strong>struct physdev_get_free_pirq</strong></a> {
+    /* IN */ 
+    int type;
+    /* OUT */
+    uint32_t pirq;
+};
+
+typedef <a href="include,public,physdev.h.html#Struct_physdev_get_free_pirq">struct physdev_get_free_pirq</a> <a  name="Typedef_physdev_get_free_pirq_t"><strong>physdev_get_free_pirq_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_get_free_pirq">physdev_get_free_pirq_t</a>);
+
+#define XEN_PCI_MMCFG_RESERVED         0x1
+
+#define PHYSDEVOP_pci_mmcfg_reserved    24
+<a  name="Struct_physdev_pci_mmcfg_reserved"><strong>struct physdev_pci_mmcfg_reserved</strong></a> {
+    uint64_t address;
+    uint16_t segment;
+    uint8_t start_bus;
+    uint8_t end_bus;
+    uint32_t flags;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_pci_mmcfg_reserved">struct physdev_pci_mmcfg_reserved</a> <a  name="Typedef_physdev_pci_mmcfg_reserved_t"><strong>physdev_pci_mmcfg_reserved_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_pci_mmcfg_reserved">physdev_pci_mmcfg_reserved_t</a>);
+
+#define XEN_PCI_DEV_EXTFN              0x1
+#define XEN_PCI_DEV_VIRTFN             0x2
+#define XEN_PCI_DEV_PXM                0x4
+
+#define PHYSDEVOP_pci_device_add        25
+<a  name="Struct_physdev_pci_device_add"><strong>struct physdev_pci_device_add</strong></a> {
+    /* IN */
+    uint16_t seg;
+    uint8_t bus;
+    uint8_t devfn;
+    uint32_t flags;
+    struct {
+        uint8_t bus;
+        uint8_t devfn;
+    } physfn;
+    /*
+     * Optional parameters array.
+     * First element ([0]) is PXM domain associated with the device (if
+     * XEN_PCI_DEV_PXM is set)
+     */
+#if defined(__STDC_VERSION__) &amp;&amp; __STDC_VERSION__ &gt;= 199901L
+    uint32_t optarr[];
+#elif defined(__GNUC__)
+    uint32_t optarr[0];
+#endif
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_pci_device_add">struct physdev_pci_device_add</a> <a  name="Typedef_physdev_pci_device_add_t"><strong>physdev_pci_device_add_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_pci_device_add">physdev_pci_device_add_t</a>);
+
+#define PHYSDEVOP_pci_device_remove     26
+#define PHYSDEVOP_restore_msi_ext       27
+/*
+ * Dom0 should use these two to announce MMIO resources assigned to
+ * MSI-X capable devices won't (prepare) or may (release) change.
+ */
+#define PHYSDEVOP_prepare_msix          30
+#define PHYSDEVOP_release_msix          31
+<a  name="Struct_physdev_pci_device"><strong>struct physdev_pci_device</strong></a> {
+    /* IN */
+    uint16_t seg;
+    uint8_t bus;
+    uint8_t devfn;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_pci_device">struct physdev_pci_device</a> <a  name="Typedef_physdev_pci_device_t"><strong>physdev_pci_device_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_pci_device">physdev_pci_device_t</a>);
+
+#define PHYSDEVOP_DBGP_RESET_PREPARE    1
+#define PHYSDEVOP_DBGP_RESET_DONE       2
+
+#define PHYSDEVOP_DBGP_BUS_UNKNOWN      0
+#define PHYSDEVOP_DBGP_BUS_PCI          1
+
+#define PHYSDEVOP_dbgp_op               29
+<a  name="Struct_physdev_dbgp_op"><strong>struct physdev_dbgp_op</strong></a> {
+    /* IN */
+    uint8_t op;
+    uint8_t bus;
+    union {
+        <a href="include,public,physdev.h.html#Struct_physdev_pci_device">struct physdev_pci_device</a> pci;
+    } u;
+};
+typedef <a href="include,public,physdev.h.html#Struct_physdev_dbgp_op">struct physdev_dbgp_op</a> <a  name="Typedef_physdev_dbgp_op_t"><strong>physdev_dbgp_op_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,physdev.h.html#Struct_physdev_dbgp_op">physdev_dbgp_op_t</a>);
+
+/*
+ * Notify that some PIRQ-bound event channels have been unmasked.
+ * ** This command is obsolete since interface version 0x00030202 and is **
+ * ** unsupported by newer versions of Xen.                              **
+ */
+#define PHYSDEVOP_IRQ_UNMASK_NOTIFY      4
+
+#if __XEN_INTERFACE_VERSION__ &lt; 0x00040600
+/*
+ * These all-capitals physdev operation names are superceded by the new names
+ * (defined above) since interface version 0x00030202. The guard above was
+ * added post-4.5 only though and hence shouldn't check for 0x00030202.
+ */
+#define PHYSDEVOP_IRQ_STATUS_QUERY       PHYSDEVOP_irq_status_query
+#define PHYSDEVOP_SET_IOPL               PHYSDEVOP_set_iopl
+#define PHYSDEVOP_SET_IOBITMAP           PHYSDEVOP_set_iobitmap
+#define PHYSDEVOP_APIC_READ              PHYSDEVOP_apic_read
+#define PHYSDEVOP_APIC_WRITE             PHYSDEVOP_apic_write
+#define PHYSDEVOP_ASSIGN_VECTOR          PHYSDEVOP_alloc_irq_vector
+#define PHYSDEVOP_FREE_VECTOR            PHYSDEVOP_free_irq_vector
+#define PHYSDEVOP_IRQ_NEEDS_UNMASK_NOTIFY XENIRQSTAT_needs_eoi
+#define PHYSDEVOP_IRQ_SHARED             XENIRQSTAT_shared
+#endif
+
+#if __XEN_INTERFACE_VERSION__ &lt; 0x00040200
+#define PHYSDEVOP_pirq_eoi_gmfn PHYSDEVOP_pirq_eoi_gmfn_v1
+#else
+#define PHYSDEVOP_pirq_eoi_gmfn PHYSDEVOP_pirq_eoi_gmfn_v2
+#endif
+
+#endif /* __XEN_PUBLIC_PHYSDEV_H__ */
+
+/*
+ * Local variables:
+ * mode: C
+ * c-file-style: "BSD"
+ * c-basic-offset: 4
+ * tab-width: 4
+ * indent-tabs-mode: nil
+ * End:
+ */
+</pre></body></html>

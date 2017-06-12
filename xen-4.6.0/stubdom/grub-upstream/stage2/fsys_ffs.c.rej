@@ -1,0 +1,11 @@
+--- stage2/fsys_ffs.c	2003-07-09 12:45:52.000000000 +0100
++++ stage2/fsys_ffs.c	2001-11-12 06:57:29.000000000 +0000
+@@ -50,7 +50,7 @@
+  * the rights to redistribute these changes.
+  *
+  *	from: Mach, Revision 2.2  92/04/04  11:35:49  rpd
+- *	$Id: fsys_ffs.c,v 1.10 2001/11/12 06:57:29 okuji Exp $
++ *	$Id: fsys_ffs.c 594 2001-11-12 06:57:29Z okuji $
+  */
+ 
+ #ifdef FSYS_FFS

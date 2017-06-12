@@ -1,0 +1,838 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="David Vrabel &lt;david.vrabel@citrix.com&gt;" />
+  <meta name="author" content="Andrew Cooper &lt;andrew.cooper3@citrix.com&gt;" />
+  <title>LibXenCtrl Domain Image Format</title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<div id="header">
+<h1 class="title">LibXenCtrl Domain Image Format</h1>
+<h2 class="author">David Vrabel &lt;<script type="text/javascript">
+<!--
+h='&#x63;&#x69;&#116;&#114;&#x69;&#120;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#100;&#x61;&#118;&#x69;&#100;&#46;&#118;&#114;&#x61;&#98;&#x65;&#108;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+e+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#100;&#x61;&#118;&#x69;&#100;&#46;&#118;&#114;&#x61;&#98;&#x65;&#108;&#32;&#x61;&#116;&#32;&#x63;&#x69;&#116;&#114;&#x69;&#120;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript>&gt;</h2>
+<h2 class="author">Andrew Cooper &lt;<script type="text/javascript">
+<!--
+h='&#x63;&#x69;&#116;&#114;&#x69;&#120;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#x61;&#110;&#100;&#114;&#x65;&#x77;&#46;&#x63;&#x6f;&#x6f;&#112;&#x65;&#114;&#x33;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+e+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#x61;&#110;&#100;&#114;&#x65;&#x77;&#46;&#x63;&#x6f;&#x6f;&#112;&#x65;&#114;&#x33;&#32;&#x61;&#116;&#32;&#x63;&#x69;&#116;&#114;&#x69;&#120;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript>&gt;</h2>
+<h3 class="date">Revision 1</h3>
+</div>
+<div id="TOC">
+<ul>
+<li><a href="#introduction"><span class="toc-section-number">1</span> Introduction</a><ul>
+<li><a href="#purpose"><span class="toc-section-number">1.1</span> Purpose</a></li>
+<li><a href="#not-yet-included"><span class="toc-section-number">1.2</span> Not Yet Included</a></li>
+</ul></li>
+<li><a href="#overview"><span class="toc-section-number">2</span> Overview</a><ul>
+<li><a href="#headers"><span class="toc-section-number">2.1</span> Headers</a></li>
+<li><a href="#records"><span class="toc-section-number">2.2</span> Records</a></li>
+<li><a href="#fields"><span class="toc-section-number">2.3</span> Fields</a></li>
+</ul></li>
+<li><a href="#headers-1"><span class="toc-section-number">3</span> Headers</a><ul>
+<li><a href="#image-header"><span class="toc-section-number">3.1</span> Image Header</a></li>
+<li><a href="#domain-header"><span class="toc-section-number">3.2</span> Domain Header</a></li>
+</ul></li>
+<li><a href="#records-1"><span class="toc-section-number">4</span> Records</a><ul>
+<li><a href="#end"><span class="toc-section-number">4.1</span> END</a></li>
+<li><a href="#page_data"><span class="toc-section-number">4.2</span> PAGE_DATA</a></li>
+<li><a href="#x86_pv_info"><span class="toc-section-number">4.3</span> X86_PV_INFO</a></li>
+<li><a href="#x86_pv_p2m_frames"><span class="toc-section-number">4.4</span> X86_PV_P2M_FRAMES</a></li>
+<li><a href="#x86_pv_vcpu_basic-extended-xsave-msrs"><span class="toc-section-number">4.5</span> X86_PV_VCPU_BASIC, EXTENDED, XSAVE, MSRS</a></li>
+<li><a href="#shared_info"><span class="toc-section-number">4.6</span> SHARED_INFO</a></li>
+<li><a href="#tsc_info"><span class="toc-section-number">4.7</span> TSC_INFO</a></li>
+<li><a href="#hvm_context"><span class="toc-section-number">4.8</span> HVM_CONTEXT</a></li>
+<li><a href="#hvm_params"><span class="toc-section-number">4.9</span> HVM_PARAMS</a></li>
+<li><a href="#toolstack-deprecated"><span class="toc-section-number">4.10</span> TOOLSTACK (deprecated)</a></li>
+<li><a href="#verify"><span class="toc-section-number">4.11</span> VERIFY</a></li>
+<li><a href="#checkpoint"><span class="toc-section-number">4.12</span> CHECKPOINT</a></li>
+</ul></li>
+<li><a href="#layout"><span class="toc-section-number">5</span> Layout</a><ul>
+<li><a href="#x86-pv-guest"><span class="toc-section-number">5.1</span> x86 PV Guest</a></li>
+<li><a href="#x86-hvm-guest"><span class="toc-section-number">5.2</span> x86 HVM Guest</a></li>
+</ul></li>
+<li><a href="#legacy-images-x86-only"><span class="toc-section-number">6</span> Legacy Images (x86 only)</a></li>
+<li><a href="#future-extensions"><span class="toc-section-number">7</span> Future Extensions</a></li>
+</ul>
+</div>
+<h1 id="introduction"><a href="#introduction"><span class="header-section-number">1</span> Introduction</a></h1>
+<h2 id="purpose"><a href="#purpose"><span class="header-section-number">1.1</span> Purpose</a></h2>
+<p>The <em>domain save image</em> is the context of a running domain used for snapshots of a domain or for transferring domains between hosts during migration.</p>
+<p>There are a number of problems with the format of the domain save image used in Xen 4.4 and earlier (the <em>legacy format</em>).</p>
+<ul>
+<li><p>Dependant on toolstack word size. A number of fields within the image are native types such as <code>unsigned long</code> which have different sizes between 32-bit and 64-bit toolstacks. This prevents domains from being migrated between hosts running 32-bit and 64-bit toolstacks.</p></li>
+<li><p>There is no header identifying the image.</p></li>
+<li><p>The image has no version information.</p></li>
+</ul>
+<p>A new format that addresses the above is required.</p>
+<p>ARM does not yet have have a domain save image format specified and the format described in this specification should be suitable.</p>
+<h2 id="not-yet-included"><a href="#not-yet-included"><span class="header-section-number">1.2</span> Not Yet Included</a></h2>
+<p>The following features are not yet fully specified and will be included in a future draft.</p>
+<ul>
+<li><p>Page data compression.</p></li>
+<li><p>ARM</p></li>
+</ul>
+<h1 id="overview"><a href="#overview"><span class="header-section-number">2</span> Overview</a></h1>
+<p>The image format consists of two main sections:</p>
+<ul>
+<li><em>Headers</em></li>
+<li><em>Records</em></li>
+</ul>
+<h2 id="headers"><a href="#headers"><span class="header-section-number">2.1</span> Headers</a></h2>
+<p>There are two headers: the <em>image header</em>, and the <em>domain header</em>. The image header describes the format of the image (version etc.). The <em>domain header</em> contains general information about the domain (architecture, type etc.).</p>
+<h2 id="records"><a href="#records"><span class="header-section-number">2.2</span> Records</a></h2>
+<p>The main part of the format is a sequence of different <em>records</em>. Each record type contains information about the domain context. At a minimum there is a END record marking the end of the records section.</p>
+<h2 id="fields"><a href="#fields"><span class="header-section-number">2.3</span> Fields</a></h2>
+<p>All the fields within the headers and records have a fixed width.</p>
+<p>Fields are always aligned to their size.</p>
+<p>Padding and reserved fields are set to zero on save and must be ignored during restore.</p>
+<p>Integer (numeric) fields in the image header are always in big-endian byte order.</p>
+<p>Integer fields in the domain header and in the records are in the endianness described in the image header (which will typically be the native ordering).</p>
+<p></p>
+<h1 id="headers-1"><a href="#headers-1"><span class="header-section-number">3</span> Headers</a></h1>
+<h2 id="image-header"><a href="#image-header"><span class="header-section-number">3.1</span> Image Header</a></h2>
+<p>The image header identifies an image as a Xen domain save image. It includes the version of this specification that the image complies with.</p>
+<p>Tools supporting version <em>V</em> of the specification shall always save images using version <em>V</em>. Tools shall support restoring from version <em>V</em>. If the previous Xen release produced version <em>V</em> - 1 images, tools shall supported restoring from these. Tools may additionally support restoring from earlier versions.</p>
+<p>The marker field can be used to distinguish between legacy images and those corresponding to this specification. Legacy images will have at one or more zero bits within the first 8 octets of the image.</p>
+<p>Fields within the image header are always in <em>big-endian</em> byte order, regardless of the setting of the endianness bit.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+
+| marker                                          |
++-----------------------+-------------------------+
+| id                    | version                 |
++-----------+-----------+-------------------------+
+| options   | (reserved)                          |
++-----------+-------------------------------------+</code></pre>
+<table>
+<col width="16%" />
+<col width="77%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">marker</td>
+<td align="left">0xFFFFFFFFFFFFFFFF.</td>
+</tr>
+<tr class="even">
+<td align="left">id</td>
+<td align="left">0x58454E46 (&quot;XENF&quot; in ASCII).</td>
+</tr>
+<tr class="odd">
+<td align="left">version</td>
+<td align="left">0x00000002. The version of this specification.</td>
+</tr>
+<tr class="even">
+<td align="left">options</td>
+<td align="left">bit 0: Endianness. 0 = little-endian, 1 = big-endian.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">bit 1-15: Reserved.</td>
+</tr>
+</tbody>
+</table>
+<p>The endianness shall be 0 (little-endian) for images generated on an i386, x86_64, or arm host.</p>
+<p></p>
+<h2 id="domain-header"><a href="#domain-header"><span class="header-section-number">3.2</span> Domain Header</a></h2>
+<p>The domain header includes general properties of the domain.</p>
+<pre><code> 0      1     2     3     4     5     6     7 octet
++-----------------------+-----------+-------------+
+| type                  | page_shift| (reserved)  |
++-----------------------+-----------+-------------+
+| xen_major             | xen_minor               |
++-----------------------+-------------------------+</code></pre>
+<table>
+<col width="16%" />
+<col width="77%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">0x0000: Reserved.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0001: x86 PV.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x0002: x86 HVM.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0003: x86 PVH.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x0004: ARM.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0005 - 0xFFFFFFFF: Reserved.</td>
+</tr>
+<tr class="odd">
+<td align="left">page_shift</td>
+<td align="left">Size of a guest page as a power of two.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">i.e., page size = 2 <sup>page_shift</sup>.</td>
+</tr>
+<tr class="odd">
+<td align="left">xen_major</td>
+<td align="left">The Xen major version when this image was saved.</td>
+</tr>
+<tr class="even">
+<td align="left">xen_minor</td>
+<td align="left">The Xen minor version when this image was saved.</td>
+</tr>
+</tbody>
+</table>
+<p>The legacy stream conversion tool writes a <code>xen_major</code> version of 0, and sets <code>xen_minor</code> to the version of itself.</p>
+<p></p>
+<h1 id="records-1"><a href="#records-1"><span class="header-section-number">4</span> Records</a></h1>
+<p>A record has a record header, type specific data and a trailing footer. If <code>body_length</code> is not a multiple of 8, the body is padded with zeroes to align the end of the record on an 8 octet boundary.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----------------------+-------------------------+
+| type                  | body_length             |
++-----------+-----------+-------------------------+
+| body...                                         |
+...
+|           | padding (0 to 7 octets)             |
++-----------+-------------------------------------+</code></pre>
+<table>
+<col width="18%" />
+<col width="76%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">type</td>
+<td align="left">0x00000000: END</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000001: PAGE_DATA</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000002: X86_PV_INFO</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000003: X86_PV_P2M_FRAMES</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000004: X86_PV_VCPU_BASIC</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000005: X86_PV_VCPU_EXTENDED</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000006: X86_PV_VCPU_XSAVE</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000007: SHARED_INFO</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x00000008: TSC_INFO</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x00000009: HVM_CONTEXT</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x0000000A: HVM_PARAMS</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0000000B: TOOLSTACK (deprecated)</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x0000000C: X86_PV_VCPU_MSRS</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0000000D: VERIFY</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x0000000E: CHECKPOINT</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x0000000F - 0x7FFFFFFF: Reserved for future <em>mandatory</em> records.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">0x80000000 - 0xFFFFFFFF: Reserved for future <em>optional</em> records.</td>
+</tr>
+<tr class="even">
+<td align="left">body_length</td>
+<td align="left">Length in octets of the record body.</td>
+</tr>
+<tr class="odd">
+<td align="left">body</td>
+<td align="left">Content of the record.</td>
+</tr>
+<tr class="even">
+<td align="left">padding</td>
+<td align="left">0 to 7 octets of zeros to pad the whole record to a multiple of 8 octets.</td>
+</tr>
+</tbody>
+</table>
+<p>Records may be <em>mandatory</em> or <em>optional</em>. Optional records have bit 31 set in their type. Restoring an image that has unrecognised or unsupported mandatory record must fail. The contents of optional records may be ignored during a restore.</p>
+<p>The following sub-sections specify the record body format for each of the record types.</p>
+<p></p>
+<h2 id="end"><a href="#end"><span class="header-section-number">4.1</span> END</a></h2>
+<p>An end record marks the end of the image, and shall be the final record in the stream.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The end record contains no fields; its body_length is 0.</p>
+<p></p>
+<h2 id="page_data"><a href="#page_data"><span class="header-section-number">4.2</span> PAGE_DATA</a></h2>
+<p>The bulk of an image consists of many PAGE_DATA records containing the memory contents.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----------------------+-------------------------+
+| count (C)             | (reserved)              |
++-----------------------+-------------------------+
+| pfn[0]                                          |
++-------------------------------------------------+
+...
++-------------------------------------------------+
+| pfn[C-1]                                        |
++-------------------------------------------------+
+| page_data[0]...                                 |
+...
++-------------------------------------------------+
+| page_data[N-1]...                               |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="16%" />
+<col width="77%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">count</td>
+<td align="left">Number of pages described in this record.</td>
+</tr>
+<tr class="even">
+<td align="left">pfn</td>
+<td align="left">An array of count PFNs and their types.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Bit 63-60: XEN_DOMCTL_PFINFO_* type (from <code>public/domctl.h</code> but shifted by 32 bits)</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">Bit 59-52: Reserved.</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="left">Bit 51-0: PFN.</td>
+</tr>
+<tr class="even">
+<td align="left">page_data</td>
+<td align="left">page_size octets of uncompressed page contents for each page set as present in the pfn array.</td>
+</tr>
+</tbody>
+</table>
+<p>Note: Count is strictly &gt; 0. N is strictly &lt;= C and it is possible for there to be no page_data in the record if all pfns are of invalid types.</p>
+<table>
+<caption>XEN_DOMCTL_PFINFO_* Page Types.</caption>
+<col width="20%" />
+<col width="15%" />
+<col width="58%" />
+<thead>
+<tr class="header">
+<th align="left">PFINFO type</th>
+<th align="left">Value</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">NOTAB</td>
+<td align="left">0x0</td>
+<td align="left">Normal page.</td>
+</tr>
+<tr class="even">
+<td align="left">L1TAB</td>
+<td align="left">0x1</td>
+<td align="left">L1 page table page.</td>
+</tr>
+<tr class="odd">
+<td align="left">L2TAB</td>
+<td align="left">0x2</td>
+<td align="left">L2 page table page.</td>
+</tr>
+<tr class="even">
+<td align="left">L3TAB</td>
+<td align="left">0x3</td>
+<td align="left">L3 page table page.</td>
+</tr>
+<tr class="odd">
+<td align="left">L4TAB</td>
+<td align="left">0x4</td>
+<td align="left">L4 page table page.</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="left">0x5-0x8</td>
+<td align="left">Reserved.</td>
+</tr>
+<tr class="odd">
+<td align="left">L1TAB_PIN</td>
+<td align="left">0x9</td>
+<td align="left">L1 page table page (pinned).</td>
+</tr>
+<tr class="even">
+<td align="left">L2TAB_PIN</td>
+<td align="left">0xA</td>
+<td align="left">L2 page table page (pinned).</td>
+</tr>
+<tr class="odd">
+<td align="left">L3TAB_PIN</td>
+<td align="left">0xB</td>
+<td align="left">L3 page table page (pinned).</td>
+</tr>
+<tr class="even">
+<td align="left">L4TAB_PIN</td>
+<td align="left">0xC</td>
+<td align="left">L4 page table page (pinned).</td>
+</tr>
+<tr class="odd">
+<td align="left">BROKEN</td>
+<td align="left">0xD</td>
+<td align="left">Broken page.</td>
+</tr>
+<tr class="even">
+<td align="left">XALLOC</td>
+<td align="left">0xE</td>
+<td align="left">Allocate only.</td>
+</tr>
+<tr class="odd">
+<td align="left">XTAB</td>
+<td align="left">0xF</td>
+<td align="left">Invalid page.</td>
+</tr>
+</tbody>
+</table>
+<p>PFNs with type <code>BROKEN</code>, <code>XALLOC</code>, or <code>XTAB</code> do not have any corresponding <code>page_data</code>.</p>
+<p>The saver uses the <code>XTAB</code> type for PFNs that become invalid in the guest's P2M table during a live migration<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>.</p>
+<p>Restoring an image with unrecognised page types shall fail.</p>
+<p></p>
+<h2 id="x86_pv_info"><a href="#x86_pv_info"><span class="header-section-number">4.3</span> X86_PV_INFO</a></h2>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----+-----+-----------+-------------------------+
+| w   | ptl | (reserved)                          |
++-----+-----+-----------+-------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">guest_width (w)</td>
+<td align="left">Guest width in octets (either 4 or 8).</td>
+</tr>
+<tr class="even">
+<td align="left">pt_levels (ptl)</td>
+<td align="left">Number of page table levels (either 3 or 4).</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="x86_pv_p2m_frames"><a href="#x86_pv_p2m_frames"><span class="header-section-number">4.4</span> X86_PV_P2M_FRAMES</a></h2>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----+-----+-----+-----+-------------------------+
+| p2m_start_pfn (S)     | p2m_end_pfn (E)         |
++-----+-----+-----+-----+-------------------------+
+| p2m_pfn[p2m frame containing pfn S]             |
++-------------------------------------------------+
+...
++-------------------------------------------------+
+| p2m_pfn[p2m frame containing pfn E]             |
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">p2m_start_pfn</td>
+<td align="left">First pfn index in the p2m_pfn array.</td>
+</tr>
+<tr class="even">
+<td align="left">p2m_end_pfn</td>
+<td align="left">Last pfn index in the p2m_pfn array.</td>
+</tr>
+<tr class="odd">
+<td align="left">p2m_pfn</td>
+<td align="left">Array of PFNs containing the guest's P2M table, for the PFN frames containing the PFN range S to E (inclusive).</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="x86_pv_vcpu_basic-extended-xsave-msrs"><a href="#x86_pv_vcpu_basic-extended-xsave-msrs"><span class="header-section-number">4.5</span> X86_PV_VCPU_BASIC, EXTENDED, XSAVE, MSRS</a></h2>
+<p>The format of these records are identical. They are all binary blobs of data which are accessed using specific pairs of domctl hypercalls.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-----------------------+-------------------------+
+| vcpu_id               | (reserved)              |
++-----------------------+-------------------------+
+| context...                                      |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="72%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">vcpu_id</td>
+<td align="left">The VCPU ID.</td>
+</tr>
+<tr class="even">
+<td align="left">context</td>
+<td align="left">Binary data for this VCPU.</td>
+</tr>
+</tbody>
+</table>
+<table>
+<col width="40%" />
+<col width="55%" />
+<thead>
+<tr class="header">
+<th align="left">Record type</th>
+<th align="left">Accessor hypercalls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">X86_PV_VCPU_BASIC</td>
+<td align="left">XEN_DOMCTL_{get,set}vcpucontext</td>
+</tr>
+<tr class="even">
+<td align="left">X86_PV_VCPU_EXTENDED</td>
+<td align="left">XEN_DOMCTL_{get,set}_ext_vcpucontext</td>
+</tr>
+<tr class="odd">
+<td align="left">X86_PV_VCPU_XSAVE</td>
+<td align="left">XEN_DOMCTL_{get,set}vcpuextstate</td>
+</tr>
+<tr class="even">
+<td align="left">X86_PV_VCPU_MSRS</td>
+<td align="left">XEN_DOMCTL_{get,set}_vcpu_msrs</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="shared_info"><a href="#shared_info"><span class="header-section-number">4.6</span> SHARED_INFO</a></h2>
+<p>The content of the Shared Info page.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+
+| shared_info                                     |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">shared_info</td>
+<td align="left">Contents of the shared info page. This record should be exactly 1 page long.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="tsc_info"><a href="#tsc_info"><span class="header-section-number">4.7</span> TSC_INFO</a></h2>
+<p>Domain TSC information, as accessed by the XEN_DOMCTL_{get,set}tscinfo hypercall sub-ops.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| mode                   | khz                    |
++------------------------+------------------------+
+| nsec                                            |
++------------------------+------------------------+
+| incarnation            | (reserved)             |
++------------------------+------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">mode</td>
+<td align="left">TSC mode, TSC_MODE_* constant.</td>
+</tr>
+<tr class="even">
+<td align="left">khz</td>
+<td align="left">TSC frequency, in kHz.</td>
+</tr>
+<tr class="odd">
+<td align="left">nsec</td>
+<td align="left">Elapsed time, in nanoseconds.</td>
+</tr>
+<tr class="even">
+<td align="left">incarnation</td>
+<td align="left">Incarnation.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="hvm_context"><a href="#hvm_context"><span class="header-section-number">4.8</span> HVM_CONTEXT</a></h2>
+<p>HVM Domain context, as accessed by the XEN_DOMCTL_{get,set}hvmcontext hypercall sub-ops.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+
+| hvm_ctx                                         |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">hvm_ctx</td>
+<td align="left">The HVM Context blob from Xen.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="hvm_params"><a href="#hvm_params"><span class="header-section-number">4.9</span> HVM_PARAMS</a></h2>
+<p>HVM Domain parameters, as accessed by the HVMOP_{get,set}_param hypercall sub-ops.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| count (C)              | (reserved)             |
++------------------------+------------------------+
+| param[0].index                                  |
++-------------------------------------------------+
+| param[0].value                                  |
++-------------------------------------------------+
+...
++-------------------------------------------------+
+| param[C-1].index                                |
++-------------------------------------------------+
+| param[C-1].value                                |
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">count</td>
+<td align="left">The number of parameters contained in this record. Each parameter in the record contains an index and value.</td>
+</tr>
+<tr class="even">
+<td align="left">param index</td>
+<td align="left">Parameter index.</td>
+</tr>
+<tr class="odd">
+<td align="left">param value</td>
+<td align="left">Parameter value.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="toolstack-deprecated"><a href="#toolstack-deprecated"><span class="header-section-number">4.10</span> TOOLSTACK (deprecated)</a></h2>
+<blockquote>
+<p><em>This record was only present for transitionary purposes during development. It is should not be used.</em></p>
+</blockquote>
+<p>An opaque blob provided by and supplied to the higher layers of the toolstack (e.g., libxl) during save and restore.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++------------------------+------------------------+
+| data                                            |
+...
++-------------------------------------------------+</code></pre>
+<table>
+<col width="23%" />
+<col width="70%" />
+<thead>
+<tr class="header">
+<th align="left">Field</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">data</td>
+<td align="left">Blob of toolstack-specific data.</td>
+</tr>
+</tbody>
+</table>
+<p></p>
+<h2 id="verify"><a href="#verify"><span class="header-section-number">4.11</span> VERIFY</a></h2>
+<p>A verify record indicates that, while all memory has now been sent, the sender shall send further memory records for debugging purposes.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The verify record contains no fields; its body_length is 0.</p>
+<p></p>
+<h2 id="checkpoint"><a href="#checkpoint"><span class="header-section-number">4.12</span> CHECKPOINT</a></h2>
+<p>A checkpoint record indicates that all the preceding records in the stream represent a consistent view of VM state.</p>
+<pre><code> 0     1     2     3     4     5     6     7 octet
++-------------------------------------------------+</code></pre>
+<p>The checkpoint record contains no fields; its body_length is 0</p>
+<p>If the stream is embedded in a higher level toolstack stream, the CHECKPOINT record marks the end of the libxc portion of the stream and the stream is handed back to the higher level for further processing.</p>
+<p>The higher level stream may then hand the stream back to libxc to process another set of records for the next consistent VM state snapshot. This next set of records may be terminated by another CHECKPOINT record or an END record.</p>
+<p></p>
+<h1 id="layout"><a href="#layout"><span class="header-section-number">5</span> Layout</a></h1>
+<p>The set of valid records depends on the guest architecture and type. No assumptions should be made about the ordering or interleaving of independent records. Record dependencies are noted below.</p>
+<h2 id="x86-pv-guest"><a href="#x86-pv-guest"><span class="header-section-number">5.1</span> x86 PV Guest</a></h2>
+<p>A typical save record for an x86 PV guest image would look like:</p>
+<ol style="list-style-type: decimal">
+<li>Image header</li>
+<li>Domain header</li>
+<li>X86_PV_INFO record</li>
+<li>X86_PV_P2M_FRAMES record</li>
+<li>Many PAGE_DATA records</li>
+<li>TSC_INFO</li>
+<li>SHARED_INFO record</li>
+<li>VCPU context records for each online VCPU
+<ol style="list-style-type: lower-alpha">
+<li>X86_PV_VCPU_BASIC record</li>
+<li>X86_PV_VCPU_EXTENDED record</li>
+<li>X86_PV_VCPU_XSAVE record</li>
+<li>X86_PV_VCPU_MSRS record</li>
+</ol></li>
+<li>END record</li>
+</ol>
+<p>There are some strict ordering requirements. The following records must be present in the following order as each of them depends on information present in the preceding ones.</p>
+<ol style="list-style-type: decimal">
+<li>X86_PV_INFO record</li>
+<li>X86_PV_P2M_FRAMES record</li>
+<li>PAGE_DATA records</li>
+<li>VCPU records</li>
+</ol>
+<h2 id="x86-hvm-guest"><a href="#x86-hvm-guest"><span class="header-section-number">5.2</span> x86 HVM Guest</a></h2>
+<p>A typical save record for an x86 HVM guest image would look like:</p>
+<ol style="list-style-type: decimal">
+<li>Image header</li>
+<li>Domain header</li>
+<li>Many PAGE_DATA records</li>
+<li>TSC_INFO</li>
+<li>HVM_PARAMS</li>
+<li>HVM_CONTEXT</li>
+</ol>
+<p>HVM_PARAMS must precede HVM_CONTEXT, as certain parameters can affect the validity of architectural state in the context.</p>
+<h1 id="legacy-images-x86-only"><a href="#legacy-images-x86-only"><span class="header-section-number">6</span> Legacy Images (x86 only)</a></h1>
+<p>Restoring legacy images from older tools shall be handled by translating the legacy format image into this new format.</p>
+<p>It shall not be possible to save in the legacy format.</p>
+<p>There are two different legacy images depending on whether they were generated by a 32-bit or a 64-bit toolstack. These shall be distinguished by inspecting octets 4-7 in the image. If these are zero then it is a 64-bit image.</p>
+<table>
+<caption>Possible values for octet 4-7 in legacy images</caption>
+<thead>
+<tr class="header">
+<th align="left">Toolstack</th>
+<th align="left">Field</th>
+<th align="left">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">64-bit</td>
+<td align="left">Bit 31-63 of the p2m_size field</td>
+<td align="left">0 (since p2m_size &lt; 2<sup>32</sup>)</td>
+</tr>
+<tr class="even">
+<td align="left">32-bit</td>
+<td align="left">extended-info chunk ID (PV)</td>
+<td align="left">0xFFFFFFFF</td>
+</tr>
+<tr class="odd">
+<td align="left">32-bit</td>
+<td align="left">Chunk type (HVM)</td>
+<td align="left">&lt; 0</td>
+</tr>
+<tr class="even">
+<td align="left">32-bit</td>
+<td align="left">Page count (HVM)</td>
+<td align="left">&gt; 0</td>
+</tr>
+</tbody>
+</table>
+<p>This assumes the presence of the extended-info chunk which was introduced in Xen 3.0.</p>
+<h1 id="future-extensions"><a href="#future-extensions"><span class="header-section-number">7</span> Future Extensions</a></h1>
+<p>All changes to this specification should bump the revision number in the title block.</p>
+<p>All changes to the image or domain headers require the image version to be increased.</p>
+<p>The format may be extended by adding additional record types.</p>
+<p>Extending an existing record type must be done by adding a new record type. This allows old images with the old record to still be restored.</p>
+<p>The image header may only be extended by <em>appending</em> additional fields. In particular, the <code>marker</code>, <code>id</code> and <code>version</code> fields must never change size or location.</p>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>In the legacy format, this is the list of unmapped PFNs in the tail.<a href="#fnref1">↩</a></p></li>
+</ol>
+</div>
+</body>
+</html>

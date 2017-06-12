@@ -1,0 +1,11 @@
+--- stage2/imgact_aout.h	2003-07-09 12:45:53.000000000 +0100
++++ stage2/imgact_aout.h	1999-06-24 01:03:29.000000000 +0100
+@@ -32,7 +32,7 @@
+  * SUCH DAMAGE.
+  *
+  *	from: @(#)exec.h	8.1 (Berkeley) 6/11/93
+- *	$Id: imgact_aout.h,v 1.1 1999/06/24 00:03:22 okuji Exp $
++ *	$Id: imgact_aout.h 98 1999-06-24 00:03:29Z okuji $
+  */
+ /*
+  *  11/23/95 - Kludge to get "ntohl" null macro added.  -- ESB

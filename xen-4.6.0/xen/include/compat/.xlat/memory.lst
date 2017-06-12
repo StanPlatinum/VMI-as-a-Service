@@ -1,0 +1,12 @@
+!	add_to_physmap
+!	add_to_physmap_batch
+!	foreign_memory_map
+!	memory_exchange
+!	memory_map
+!	memory_reservation
+?	mem_access_op
+!	pod_target
+!	remove_from_physmap
+!	reserved_device_memory_map
+?	vmemrange
+!	vnuma_topology_info

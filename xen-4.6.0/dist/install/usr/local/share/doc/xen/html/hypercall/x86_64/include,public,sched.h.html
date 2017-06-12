@@ -1,0 +1,183 @@
+<html><head><title>include/public/sched.h - arch-x86_64 - Xen public headers</title></head><body><pre>
+/******************************************************************************
+ * sched.h
+ *
+ * Scheduler state interactions
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Copyright (c) 2005, Keir Fraser &lt;keir@xensource.com&gt;
+ */
+
+#ifndef __XEN_PUBLIC_SCHED_H__
+#define __XEN_PUBLIC_SCHED_H__
+
+#include "event_channel.h"
+
+/*
+ * `incontents 150 sched <a name="incontents_sched"><strong>Guest Scheduler Operations</strong></a>
+ *
+ * The SCHEDOP interface provides mechanisms for a guest to interact
+ * with the scheduler, including yield, blocking and shutting itself
+ * down.
+ */
+
+/*
+ * The prototype for this hypercall is:
+ * ` long <a  name="Func_HYPERVISOR_sched_op"><strong>HYPERVISOR_sched_op</strong></a>(<a href="include,public,sched.h.html#Enum_sched_op">enum sched_op</a> cmd, void *arg, ...)
+ *
+ * @cmd == SCHEDOP_??? (scheduler operation).
+ * @arg == Operation-specific extra argument(s), as described below.
+ * ...  == Additional Operation-specific extra arguments, described below.
+ *
+ * Versions of Xen prior to 3.0.2 provided only the following legacy version
+ * of this hypercall, supporting only the commands yield, block and shutdown:
+ *  long sched_op(int cmd, unsigned long arg)
+ * @cmd == SCHEDOP_??? (scheduler operation).
+ * @arg == 0               (SCHEDOP_yield and SCHEDOP_block)
+ *      == SHUTDOWN_* code (SCHEDOP_shutdown)
+ *
+ * This legacy version is available to new guests as:
+ * ` long <a  name="Func_HYPERVISOR_sched_op_compat"><strong>HYPERVISOR_sched_op_compat</strong></a>(<a href="include,public,sched.h.html#Enum_sched_op">enum sched_op</a> cmd, unsigned long arg)
+ */
+/* [see <a href="include,public,xen.h.html#EnumVal___HYPERVISOR_sched_op">__HYPERVISOR_sched_op</a>] */
+/* [see <a href="include,public,xen.h.html#EnumVal___HYPERVISOR_sched_op_compat">__HYPERVISOR_sched_op_compat</a>] */
+
+/* ` <a  name="Enum_sched_op"><strong>enum sched_op</strong></a> { // SCHEDOP_* =&gt; struct sched_* */
+/*
+ * Voluntarily yield the CPU.
+ * @arg == NULL.
+ */
+#define <a  name="EnumVal_SCHEDOP_yield"><strong>SCHEDOP_yield</strong></a>       0
+
+/*
+ * Block execution of this VCPU until an event is received for processing.
+ * If called with event upcalls masked, this operation will atomically
+ * reenable event delivery and check for pending events before blocking the
+ * VCPU. This avoids a "wakeup waiting" race.
+ * @arg == NULL.
+ */
+#define <a  name="EnumVal_SCHEDOP_block"><strong>SCHEDOP_block</strong></a>       1
+
+/*
+ * Halt execution of this domain (all VCPUs) and notify the system controller.
+ * @arg == pointer to <a href="include,public,sched.h.html#Struct_sched_shutdown">sched_shutdown_t</a> structure.
+ *
+ * If the <a href="include,public,sched.h.html#Struct_sched_shutdown">sched_shutdown_t</a> reason is SHUTDOWN_suspend then
+ * x86 PV guests must also set RDX (EDX for 32-bit guests) to the MFN
+ * of the guest's start info page.  RDX/EDX is the third hypercall
+ * argument.
+ *
+ * In addition, which reason is SHUTDOWN_suspend this hypercall
+ * returns 1 if suspend was cancelled or the domain was merely
+ * checkpointed, and 0 if it is resuming in a new domain.
+ */
+#define <a href="include,public,sched.h.html#Struct_sched_shutdown" name="EnumVal_SCHEDOP_shutdown"><strong>SCHEDOP_shutdown</strong></a>    2
+
+/*
+ * Poll a set of event-channel ports. Return when one or more are pending. An
+ * optional timeout may be specified.
+ * @arg == pointer to <a href="include,public,sched.h.html#Struct_sched_poll">sched_poll_t</a> structure.
+ */
+#define <a href="include,public,sched.h.html#Struct_sched_poll" name="EnumVal_SCHEDOP_poll"><strong>SCHEDOP_poll</strong></a>        3
+
+/*
+ * Declare a shutdown for another domain. The main use of this function is
+ * in interpreting shutdown requests and reasons for fully-virtualized
+ * domains.  A para-virtualized domain may use SCHEDOP_shutdown directly.
+ * @arg == pointer to <a href="include,public,sched.h.html#Struct_sched_remote_shutdown">sched_remote_shutdown_t</a> structure.
+ */
+#define <a href="include,public,sched.h.html#Struct_sched_remote_shutdown" name="EnumVal_SCHEDOP_remote_shutdown"><strong>SCHEDOP_remote_shutdown</strong></a>        4
+
+/*
+ * Latch a shutdown code, so that when the domain later shuts down it
+ * reports this code to the control tools.
+ * @arg == <a href="include,public,sched.h.html#Struct_sched_shutdown">sched_shutdown_t</a>, as for SCHEDOP_shutdown.
+ */
+#define <a  name="EnumVal_SCHEDOP_shutdown_code"><strong>SCHEDOP_shutdown_code</strong></a> 5
+
+/*
+ * Setup, poke and destroy a domain watchdog timer.
+ * @arg == pointer to <a href="include,public,sched.h.html#Struct_sched_watchdog">sched_watchdog_t</a> structure.
+ * With id == 0, setup a domain watchdog timer to cause domain shutdown
+ *               after timeout, returns watchdog id.
+ * With id != 0 and timeout == 0, destroy domain watchdog timer.
+ * With id != 0 and timeout != 0, poke watchdog timer and set new timeout.
+ */
+#define <a href="include,public,sched.h.html#Struct_sched_watchdog" name="EnumVal_SCHEDOP_watchdog"><strong>SCHEDOP_watchdog</strong></a>    6
+/* ` } */
+
+<a  name="Struct_sched_shutdown"><strong>struct sched_shutdown</strong></a> {
+    unsigned int reason; /* SHUTDOWN_* =&gt; <a href="include,public,sched.h.html#Enum_sched_shutdown_reason">enum sched_shutdown_reason</a> */
+};
+typedef <a href="include,public,sched.h.html#Struct_sched_shutdown">struct sched_shutdown</a> <a  name="Typedef_sched_shutdown_t"><strong>sched_shutdown_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,sched.h.html#Struct_sched_shutdown">sched_shutdown_t</a>);
+/* [see <a href="include,public,sched.h.html#EnumVal_SCHEDOP_shutdown">SCHEDOP_shutdown</a>] */
+
+<a  name="Struct_sched_poll"><strong>struct sched_poll</strong></a> {
+    XEN_GUEST_HANDLE(<a href="include,public,event_channel.h.html#Typedef_evtchn_port_t">evtchn_port_t</a>) ports;
+    unsigned int nr_ports;
+    uint64_t timeout;
+};
+typedef <a href="include,public,sched.h.html#Struct_sched_poll">struct sched_poll</a> <a  name="Typedef_sched_poll_t"><strong>sched_poll_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,sched.h.html#Struct_sched_poll">sched_poll_t</a>);
+/* [see <a href="include,public,sched.h.html#EnumVal_SCHEDOP_poll">SCHEDOP_poll</a>] */
+
+<a  name="Struct_sched_remote_shutdown"><strong>struct sched_remote_shutdown</strong></a> {
+    <a href="include,public,xen.h.html#Typedef_domid_t">domid_t</a> domain_id;         /* Remote domain ID */
+    unsigned int reason;       /* SHUTDOWN_* =&gt; <a href="include,public,sched.h.html#Enum_sched_shutdown_reason">enum sched_shutdown_reason</a> */
+};
+typedef <a href="include,public,sched.h.html#Struct_sched_remote_shutdown">struct sched_remote_shutdown</a> <a  name="Typedef_sched_remote_shutdown_t"><strong>sched_remote_shutdown_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,sched.h.html#Struct_sched_remote_shutdown">sched_remote_shutdown_t</a>);
+/* [see <a href="include,public,sched.h.html#EnumVal_SCHEDOP_remote_shutdown">SCHEDOP_remote_shutdown</a>] */
+
+<a  name="Struct_sched_watchdog"><strong>struct sched_watchdog</strong></a> {
+    uint32_t id;                /* watchdog ID */
+    uint32_t timeout;           /* timeout */
+};
+typedef <a href="include,public,sched.h.html#Struct_sched_watchdog">struct sched_watchdog</a> <a  name="Typedef_sched_watchdog_t"><strong>sched_watchdog_t</strong></a>;
+DEFINE_XEN_GUEST_HANDLE(<a href="include,public,sched.h.html#Struct_sched_watchdog">sched_watchdog_t</a>);
+/* [see <a href="include,public,sched.h.html#EnumVal_SCHEDOP_watchdog">SCHEDOP_watchdog</a>] */
+
+/*
+ * Reason codes for SCHEDOP_shutdown. These may be interpreted by control
+ * software to determine the appropriate action. For the most part, Xen does
+ * not care about the shutdown code.
+ */
+/* ` <a  name="Enum_sched_shutdown_reason"><strong>enum sched_shutdown_reason</strong></a> { */
+#define SHUTDOWN_poweroff   0  /* Domain exited normally. Clean up and kill. */
+#define SHUTDOWN_reboot     1  /* Clean up, kill, and then restart.          */
+#define SHUTDOWN_suspend    2  /* Clean up, save suspend info, kill.         */
+#define SHUTDOWN_crash      3  /* Tell controller we've crashed.             */
+#define SHUTDOWN_watchdog   4  /* Restart because watchdog time expired.     */
+#define SHUTDOWN_MAX        4  /* Maximum valid shutdown reason.             */
+/* ` } */
+
+#endif /* __XEN_PUBLIC_SCHED_H__ */
+
+/*
+ * Local variables:
+ * mode: C
+ * c-file-style: "BSD"
+ * c-basic-offset: 4
+ * tab-width: 4
+ * indent-tabs-mode: nil
+ * End:
+ */
+</pre></body></html>

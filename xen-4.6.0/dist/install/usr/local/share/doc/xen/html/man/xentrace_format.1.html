@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
+</head>
+
+<body style="background-color: white">
+
+
+
+<ul id="index">
+  <li><a href="#NAME">NAME</a></li>
+  <li><a href="#SYNOPSIS">SYNOPSIS</a></li>
+  <li><a href="#DESCRIPTION">DESCRIPTION</a></li>
+  <li><a href="#AUTHOR">AUTHOR</a></li>
+  <li><a href="#SEE-ALSO">SEE ALSO</a></li>
+</ul>
+
+<h1 id="NAME">NAME</h1>
+
+<p>xentrace_format - pretty-print Xen trace data</p>
+
+<h1 id="SYNOPSIS">SYNOPSIS</h1>
+
+<p><b>xentrace_format</b> [ <i>DEFS-FILE</i> ]</p>
+
+<h1 id="DESCRIPTION">DESCRIPTION</h1>
+
+<p><b>xentrace_format</b> parses trace data in <b>xentrace</b> binary format from standard input and reformats it according to the rules in a file of definitions (<i>DEFS-FILE</i>), printing to standard output.</p>
+
+<p>The rules in <i>DEFS-FILE</i> should have the format shown below:</p>
+
+<p><i>event_id</i> <i>whitespace</i> <i>format</i></p>
+
+<p>Each rule should start on a new line.</p>
+
+<p>The format string may include format specifiers, such as: %(cpu)d, %(tsc)d, %(event)d, %(1)d, %(2)d, %(3)d, %(4)d, %(5)d</p>
+
+<p>[ the `d&#39; format specifier output in decimal, alternatively `x&#39; will output in hexadecimal and `o&#39; will output in octal ]</p>
+
+<p>These correspond to the CPU number, event ID, timestamp counter and the 5 data fields from the trace record. There should be one such rule for each type of event to be pretty-printed (events which do not have formatting rules are ignored).</p>
+
+<p>A sample format file for Xen&#39;s predefined trace events is available in the file tools/xentrace/formats in the Xen source tree.</p>
+
+<p>Depending on your system and the rate at which trace data is produced, this script may not be able to keep up with the output of <b>xentrace</b> if it is piped directly. In these circumstances you should have <b>xentrace</b> output to a file for processing off-line.</p>
+
+<h1 id="AUTHOR">AUTHOR</h1>
+
+<p>Mark A. Williamson &lt;mark.a.williamson@intel.com&gt;</p>
+
+<h1 id="SEE-ALSO">SEE ALSO</h1>
+
+<p>xentrace(8)</p>
+
+
+</body>
+
+</html>
+
+

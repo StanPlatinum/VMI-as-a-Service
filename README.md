@@ -21,8 +21,12 @@ Event logging.
 Params parsing.
 
 # Usage:
-## Install the modified Xen (Xen-4.6.0)
+## Install the modified Xen 
+Please check the DIR 'Xen-4.6.0'
+
 ## Install the modified Xentools
+Please check the DIR 'Xen-4.6.0'
+
 ## Install libvmi
 ### The three steps above can be found on the homepages of Xen and LibVMI.
 

@@ -13,12 +13,12 @@ Very fast. Firstly, VMFUNC is way to faster than hypercall. Secondly, Dom0's VMI
 
 # It consists of three parts:
 ## 1. VMFUNC perception module
-    ### VMFUNC overloading.
-    ### DomID and eptp index calculation.
+VMFUNC overloading.
+DomID and eptp index calculation.
 ## 2. Params recording module
-    ### Event logging.
+Event logging.
 ## 3. VMI triggering module
-    ### Params parsing.
+Params parsing.
 
 # Usage:
 ## Install the modified Xen (Xen-4.6.0)
@@ -32,6 +32,9 @@ In each guest, users had better add the two following lines in original config f
 
 altp2mhvm = 1
 shadow_memory = 16
+
+## Create alternative EPTs for the target VM
+Please see the code in DIR 'hvm_altp2m_prepare_for_vmfunc_test'
 
 ## Insert VMFUNC instructions in the suspicious process on the target VM
 Please see the code in DIR 'exec_vmfunc'

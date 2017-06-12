@@ -1,1 +1,0 @@
-cmd_/home/tracepoint/CAPT/switch_on/switch_on_off.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/tracepoint/CAPT/switch_on/switch_on_off.ko /home/tracepoint/CAPT/switch_on/switch_on_off.o /home/tracepoint/CAPT/switch_on/switch_on_off.mod.o

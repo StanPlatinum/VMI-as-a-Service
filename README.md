@@ -4,7 +4,7 @@
 ## 1. for guest user. 
 If a guest user would like to run a susceptible app, but has no idea whether the app is a malware-ish, he/she could use the VMFUNC interface to ask hypervisor to do the VMI scanning for him/her.
 ## 2. for cloud provider. 
-The cloud provider can use it as an instumentation tools to monitoring a guest-VM's behavior.
+The cloud provider can use it to monitoring a guest-VM's behavior.
 
 # Features:
 ## 1. fast. 
@@ -19,3 +19,34 @@ Very fast. Firstly, VMFUNC is way to faster than hypercall. Secondly, Dom0's VMI
     ### Event logging.
 ## 3. VMI triggering module
     ### Params parsing.
+
+# Usage:
+## Install the modified Xen (Xen-4.6.0)
+## Install the modified Xentools
+## Install libvmi
+### The three steps above can be found on the homepages of Xen and LibVMI.
+
+## Creating a HVM guest
+Please also refer to Xen homepage...
+In each guest, users had better add the two following lines in original config files:
+
+altp2mhvm = 1
+shadow_memory = 16
+
+## Insert VMFUNC instructions in the suspicious process on the target VM
+Please see the code in DIR 'exec_vmfunc'
+
+## Make a VMI example in Dom0
+Our team have made two programs, cMonitor and CAPT.
+Please find our paper 'cMonitor: VMI-Based Fine-Grained Monitoring Mechanism in Cloud' and 'CAPT: Context-Aware Provenance Tracing for Attack Forensics'.
+
+## Insert the VMI example in tools/xentrace/xentrace.c
+
+## Switch on
+Please see the code in DIR 'switch on'
+
+## Start Xentrace
+example command: xentrace -D -e 0X00082030 tracelog.dat
+'0x00082030' is the eventmask for VMFUNC, which is built in our Xen version.
+
+## Now you can use the VMI program to check the output without pause the target VM!

@@ -18,7 +18,7 @@
 # Description:       Starts and stops the daemons neeeded for xl/xend
 ### END INIT INFO
 
-XENSTORED=/usr/local/sbin/xenstored
+XENSTORED=/usr/local/sbin/oxenstored
 BACKEND_MODULES="xen-evtchn xen-gntdev xen-gntalloc xen-blkback xen-netback xen-pciback evtchn gntdev netbk blkbk xen-scsibk usbbk pciback xen-acpi-processor blktap2"
 
 . /etc/xen/scripts/hotplugpath.sh

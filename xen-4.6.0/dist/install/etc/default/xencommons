@@ -18,7 +18,7 @@
 #  * /usr/local/sbin/xenstored
 #
 # Changing this requires a reboot to take effect.
-#XENSTORED=/usr/local/sbin/xenstored
+#XENSTORED=/usr/local/sbin/oxenstored
 
 ## Type: string
 ## Default: ""

@@ -1,1 +1,0 @@
-i386-softmmu/config-devices.mak:  /home/whu-vmfunc/Documents/xen-4.6.0-git/tools/qemu-xen/default-configs/pci.mak /home/whu-vmfunc/Documents/xen-4.6.0-git/tools/qemu-xen/default-configs/sound.mak /home/whu-vmfunc/Documents/xen-4.6.0-git/tools/qemu-xen/default-configs/usb.mak  
